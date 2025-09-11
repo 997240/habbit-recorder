@@ -1,0 +1,1 @@
+if('serviceWorker' in navigator) navigator.serviceWorker.register('/habbit-recorder/dev-sw.js?dev-sw', { scope: '/habbit-recorder/', type: 'classic' })
