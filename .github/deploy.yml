@@ -1,0 +1,50 @@
+# Simple workflow for deploying static content to GitHub Pages
+name: Deploy static content to Pages
+
+on:
+  # 在推送到 "main" 分支时运行
+  push:
+    branches: ['main']
+
+  # 允许你从 Actions 页签手动运行这个工作流
+  workflow_dispatch:
+
+# 设置 GITHUB_TOKEN 的权限，以允许部署到 GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 只允许同时进行一次部署，跳过排队中的运行，但正在进行的运行除外
+concurrency:
+  group: 'pages'
+  cancel-in-progress: true
+
+jobs:
+  # 单个部署任务，因为我们只部署到 gh-pages
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install dependencies
+        run: npm install
+      - name: Build
+        run: npm run build
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # 从 "dist" 目录上传
+          path: './dist'
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
