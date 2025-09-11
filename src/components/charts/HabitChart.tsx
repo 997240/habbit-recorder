@@ -83,8 +83,8 @@ export const HabitChart: React.FC<HabitChartProps> = ({ habit, records, timeRang
                   {data.value === 0 
                     ? '准时' 
                     : data.value > 0 
-                      ? `晚了 ${Math.floor(Math.abs(data.value) / 60)}小时${Math.abs(data.value) % 60}分钟` 
-                      : `早了 ${Math.floor(Math.abs(data.value) / 60)}小时${Math.abs(data.value) % 60}分钟`
+                      ? `早了 ${Math.floor(Math.abs(data.value) / 60)}小时${Math.abs(data.value) % 60}分钟` 
+                      : `晚了 ${Math.floor(Math.abs(data.value) / 60)}小时${Math.abs(data.value) % 60}分钟`
                   }
                 </span>
               </>

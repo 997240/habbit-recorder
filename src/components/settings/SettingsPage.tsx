@@ -125,7 +125,7 @@ export const SettingsPage: React.FC = () => {
                   onClick={handleExport}
                   className="px-4 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-all duration-200 flex items-center"
                 >
-                  <Download className="h-4 w-4 mr-2" />
+                  <Upload className="h-4 w-4 mr-2" />
                   导出数据
                 </button>
               </div>
@@ -150,7 +150,7 @@ export const SettingsPage: React.FC = () => {
                   disabled={importing}
                   className="px-4 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center"
                 >
-                  <Upload className="h-4 w-4 mr-2" />
+                  <Download className="h-4 w-4 mr-2" />
                   {importing ? '导入中...' : '选择文件导入'}
                 </button>
                 {importing && (
