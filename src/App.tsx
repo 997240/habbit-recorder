@@ -4,7 +4,7 @@ import { Dashboard } from './components/dashboard/Dashboard';
 import { HabitList } from './components/habits/HabitList';
 import { HabitForm } from './components/habits/HabitForm';
 import { RecordPage } from './components/record/RecordPage';
-import SettingsPage from './components/settings/SettingsPage.tsx';
+import { SettingsPage } from './components/settings/SettingsPage';
 import { Habit, HabitRecord, AppState } from './types';
 import { storage } from './utils/storage';
 import { generateId, formatDate } from './utils/dateUtils';
