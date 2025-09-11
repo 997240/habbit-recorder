@@ -14,7 +14,12 @@ export interface HabitRecord {
   id: string;
   habitId: string;
   date: string;
-  value: number | string | boolean;
+  // 将单一value改为values数组
+  values: Array<{
+    id: string;         // 每条记录的唯一ID
+    value: number | string | boolean;
+    timestamp: string;  // 记录时间戳
+  }>;
   note?: string;
   createdAt: string;
 }

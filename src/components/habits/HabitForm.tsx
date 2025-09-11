@@ -51,7 +51,7 @@ export const HabitForm: React.FC<HabitFormProps> = ({ habit, onSave, onCancel })
     { value: 'numeric', label: '数值', description: '追踪数字（如：俯卧撑、深蹲、番茄钟次数）' },
     { value: 'duration', label: '时长', description: '追踪花费的时间（如：冥想、锻炼、瑜伽）' },
     { value: 'time-based', label: '时间点', description: '追踪特定的时间[睡眠记录]（如：睡觉、起床）' },
-    { value: 'check-in', label: '签到', description: '简单的完成与否追踪（如：是否喝牛奶、吃苹果）' }
+    { value: 'check-in', label: '打卡', description: '简单的完成与否追踪（如：是否去健身房、喝牛奶、吃苹果）' }
   ];
 
   return (
@@ -143,7 +143,7 @@ export const HabitForm: React.FC<HabitFormProps> = ({ habit, onSave, onCancel })
             {/* Target */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                {formData.type === 'check-in' ? '每日目标（签到类型无需设置）' : '每日目标 *'}
+                {formData.type === 'check-in' ? '每日目标（打卡类型无需设置）' : '每日目标 *'}
               </label>
               {formData.type === 'time-based' ? (
                 <input
@@ -163,7 +163,7 @@ export const HabitForm: React.FC<HabitFormProps> = ({ habit, onSave, onCancel })
                   className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                 />
               ) : (
-                <p className="text-sm text-gray-500 italic">签到类习惯不需要设置目标值。</p>
+                <p className="text-sm text-gray-500 italic">打卡类习惯不需要设置目标值。</p>
               )}
             </div>
 

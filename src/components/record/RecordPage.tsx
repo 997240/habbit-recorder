@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { Calendar, Save, ChevronLeft, ChevronRight, CheckCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { Calendar, Save, ChevronLeft, ChevronRight, CheckCircle, Plus, Minus } from 'lucide-react';
 import { Habit, HabitRecord } from '../../types';
-import { formatDate, formatDisplayDate } from '../../utils/dateUtils';
+import { formatDate, formatDisplayDate, generateId } from '../../utils/dateUtils';
 
 interface RecordPageProps {
   habits: Habit[];
@@ -13,6 +13,8 @@ interface RecordPageProps {
 export const RecordPage: React.FC<RecordPageProps> = ({ habits, records, onSaveAllRecords }) => {
   const [selectedDate, setSelectedDate] = useState<string>(formatDate(new Date()));
   const [recordValues, setRecordValues] = useState<Record<string, any>>({});
+  // 为数值型和时长型习惯存储多个输入值
+  const [multipleValues, setMultipleValues] = useState<Record<string, Array<{id: string, value: number | string}>>>({});
   const [notification, setNotification] = useState<{show: boolean; message: string}>({show: false, message: ''});
 
   const activeHabits = habits.filter(habit => habit.isActive);
@@ -21,13 +23,30 @@ export const RecordPage: React.FC<RecordPageProps> = ({ habits, records, onSaveA
   React.useEffect(() => {
     const existingRecords = records.filter(record => record.date === selectedDate);
     const values: Record<string, any> = {};
+    const multiples: Record<string, Array<{id: string, value: number | string}>> = {};
 
     existingRecords.forEach(record => {
-      values[record.habitId] = record.value;
+      if (record.values && Array.isArray(record.values)) {
+        // 新格式：多值记录
+        const habit = habits.find(h => h.id === record.habitId);
+        if (habit && (habit.type === 'numeric' || habit.type === 'duration')) {
+          multiples[record.habitId] = record.values.map(v => ({
+            id: v.id,
+            value: v.value as number
+          }));
+        } else {
+          // 对于时间点型和签到型，取第一个值
+          values[record.habitId] = record.values[0]?.value;
+        }
+      } else {
+        // 兼容旧格式
+        values[record.habitId] = (record as any).value;
+      }
     });
 
     setRecordValues(values);
-  }, [selectedDate]);
+    setMultipleValues(multiples);
+  }, [selectedDate, habits]);
 
   const handleDateChange = (direction: 'prev' | 'next') => {
     const currentDate = new Date(selectedDate);
@@ -41,13 +60,37 @@ export const RecordPage: React.FC<RecordPageProps> = ({ habits, records, onSaveA
     const recordsToSave: Array<Omit<HabitRecord, 'id' | 'createdAt'>> = [];
     
     activeHabits.forEach(habit => {
-      const value = recordValues[habit.id];
-      if (value !== undefined && value !== '') {
-        recordsToSave.push({
-          habitId: habit.id,
-          date: selectedDate,
-          value: value
-        });
+      if (habit.type === 'numeric' || habit.type === 'duration') {
+        // 处理多值记录
+        const values = multipleValues[habit.id];
+        if (values && values.length > 0) {
+          const validValues = values.filter(v => v.value !== '' && v.value !== 0);
+          if (validValues.length > 0) {
+            recordsToSave.push({
+              habitId: habit.id,
+              date: selectedDate,
+              values: validValues.map(v => ({
+                id: v.id,
+                value: v.value,
+                timestamp: new Date().toISOString()
+              }))
+            });
+          }
+        }
+      } else {
+        // 处理单值记录（时间点型和签到型）
+        const value = recordValues[habit.id];
+        if (value !== undefined && value !== '') {
+          recordsToSave.push({
+            habitId: habit.id,
+            date: selectedDate,
+            values: [{
+              id: generateId(),
+              value: value,
+              timestamp: new Date().toISOString()
+            }]
+          });
+        }
       }
     });
 
@@ -67,34 +110,88 @@ export const RecordPage: React.FC<RecordPageProps> = ({ habits, records, onSaveA
     }
   };
 
+  // 添加新输入框的函数
+  const addInputField = (habitId: string) => {
+    const currentValues = multipleValues[habitId] || [];
+    const newValue = { id: generateId(), value: 0 };
+    setMultipleValues({
+      ...multipleValues,
+      [habitId]: [...currentValues, newValue]
+    });
+  };
+
+  // 删除输入框的函数
+  const removeInputField = (habitId: string, valueId: string) => {
+    const currentValues = multipleValues[habitId] || [];
+    const filteredValues = currentValues.filter(v => v.id !== valueId);
+    setMultipleValues({
+      ...multipleValues,
+      [habitId]: filteredValues
+    });
+  };
+
+  // 更新输入框的值
+  const updateInputValue = (habitId: string, valueId: string, newValue: number) => {
+    const currentValues = multipleValues[habitId] || [];
+    const updatedValues = currentValues.map(v => 
+      v.id === valueId ? { ...v, value: newValue } : v
+    );
+    setMultipleValues({
+      ...multipleValues,
+      [habitId]: updatedValues
+    });
+  };
+
   const renderHabitInput = (habit: Habit) => {
     const value = recordValues[habit.id];
 
     switch (habit.type) {
       case 'numeric':
-        return (
-          <input
-            type="number"
-            min="0"
-            step="0.1"
-            value={value || ''}
-            onChange={(e) => setRecordValues({ ...recordValues, [habit.id]: Number(e.target.value) || 0 })}
-            placeholder="输入数值"
-            className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          />
-        );
-
       case 'duration':
+        const values = multipleValues[habit.id] || [];
+        const totalValue = values.reduce((sum, v) => sum + (typeof v.value === 'number' ? v.value : 0), 0);
+        
         return (
-          <input
-            type="number"
-            min="0"
-            step="1"
-            value={value || ''}
-            onChange={(e) => setRecordValues({ ...recordValues, [habit.id]: Number(e.target.value) || 0 })}
-            placeholder="输入时长"
-            className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          />
+          <div className="w-full space-y-2">
+            {/* 显示累计值 */}
+            {values.length > 0 && (
+              <div className="text-sm text-gray-600 text-right">
+                累计: {totalValue}{habit.unit ? ` ${habit.unit}` : ''}
+              </div>
+            )}
+            
+            {/* 输入框列表 */}
+            {values.map((v) => (
+              <div key={v.id} className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min="0"
+                  step={habit.type === 'numeric' ? "0.1" : "1"}
+                  value={v.value || ''}
+                  onChange={(e) => updateInputValue(habit.id, v.id, Number(e.target.value) || 0)}
+                  placeholder={habit.type === 'numeric' ? "输入数值" : "输入时长"}
+                  className="flex-1 px-2 py-1.5 text-sm border border-gray-200 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+                <button
+                  type="button"
+                  onClick={() => removeInputField(habit.id, v.id)}
+                  className="p-1.5 text-red-500 hover:bg-red-50 rounded transition-colors"
+                >
+                  <Minus className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+            
+            {/* 添加新输入框按钮 */}
+            <button
+              type="button"
+              onClick={() => addInputField(habit.id)}
+              className="w-full flex items-center justify-center gap-2 px-2 py-1.5 text-sm text-blue-600 border border-blue-200 rounded hover:bg-blue-50 transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              添加记录
+            </button>
+          </div>
         );
 
       case 'time-based':
@@ -198,7 +295,7 @@ export const RecordPage: React.FC<RecordPageProps> = ({ habits, records, onSaveA
                   <h3 className="font-medium text-gray-900">{habit.name}</h3>
                   <p className="text-sm text-gray-500">{getHabitSummary(habit)}</p>
                 </div>
-                <div className="ml-4 flex-shrink-0 w-32">
+                <div className="ml-4 flex-shrink-0 w-48">
                   {renderHabitInput(habit)}
                 </div>
               </div>

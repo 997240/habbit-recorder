@@ -69,6 +69,43 @@ export const storage = {
     localStorage.setItem(STORAGE_KEYS.RECORDS, JSON.stringify(allRecords));
   },
 
+  // 获取累计值的辅助函数
+  getAccumulatedValue: (habitId: string, date: string): number => {
+    const records = storage.getRecords();
+    const record = records.find(r => r.habitId === habitId && r.date === date);
+    if (!record || !record.values) return 0;
+    
+    return record.values.reduce((sum, entry) => {
+      const value = typeof entry.value === 'number' ? entry.value : 0;
+      return sum + value;
+    }, 0);
+  },
+
+  // 获取记录的值（适用于所有习惯类型）
+  getRecordValue: (habitId: string, date: string, habitType: 'numeric' | 'duration' | 'time-based' | 'check-in'): number | string | boolean => {
+    const records = storage.getRecords();
+    const record = records.find(r => r.habitId === habitId && r.date === date);
+    
+    // 如果没有记录，返回默认值
+    if (!record) return habitType === 'check-in' ? false : 0;
+    
+    // 处理新格式数据
+    if (record.values && Array.isArray(record.values)) {
+      // 数值型和时长型返回累计值
+      if (habitType === 'numeric' || habitType === 'duration') {
+        return record.values.reduce((sum, entry) => {
+          const value = typeof entry.value === 'number' ? entry.value : 0;
+          return sum + value;
+        }, 0);
+      }
+      // 其他类型返回第一个值
+      return record.values[0]?.value || (habitType === 'check-in' ? false : '');
+    }
+    
+    // 兼容旧格式
+    return (record as any).value || (habitType === 'check-in' ? false : 0);
+  },
+
   // Get all habits (for export/import)
   getAllHabits: (): Habit[] => {
     const habitsData = localStorage.getItem(STORAGE_KEYS.HABITS);
