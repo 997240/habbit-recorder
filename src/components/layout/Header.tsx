@@ -1,19 +1,17 @@
 import React from 'react';
-import { Target, LogOut, BarChart3, Calendar, Settings } from 'lucide-react';
-import { User } from '../../types';
+import { Target, BarChart3, Calendar, List, Cog } from 'lucide-react';
 
 interface HeaderProps {
-  user: User;
   currentPage: string;
-  onNavigate: (page: 'dashboard' | 'habits' | 'record') => void;
-  onLogout: () => void;
+  onNavigate: (page: 'dashboard' | 'habits' | 'record' | 'settings') => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ user, currentPage, onNavigate, onLogout }) => {
+export const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
   const navItems = [
     { id: 'dashboard', label: '仪表板', icon: BarChart3 },
     { id: 'record', label: '记录', icon: Calendar },
-    { id: 'habits', label: '习惯', icon: Settings },
+    { id: 'habits', label: '习惯', icon: List },
+    { id: 'settings', label: '设置', icon: Cog },
   ];
 
   return (
@@ -35,7 +33,7 @@ export const Header: React.FC<HeaderProps> = ({ user, currentPage, onNavigate, o
               return (
                 <button
                   key={item.id}
-                  onClick={() => onNavigate(item.id as any)}
+                  onClick={() => onNavigate(item.id as 'dashboard' | 'habits' | 'record' | 'settings')}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
                     currentPage === item.id
                       ? 'bg-blue-100 text-blue-700 shadow-sm'
@@ -49,24 +47,8 @@ export const Header: React.FC<HeaderProps> = ({ user, currentPage, onNavigate, o
             })}
           </nav>
 
-          {/* User Menu */}
-          <div className="flex items-center gap-4">
-            <div className="hidden sm:flex items-center gap-3">
-              <img
-                src={user.avatar}
-                alt={user.name}
-                className="w-8 h-8 rounded-full border-2 border-gray-200"
-              />
-              <span className="text-sm font-medium text-gray-700">{user.name}</span>
-            </div>
-            <button
-              onClick={onLogout}
-              className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-full transition-all duration-200"
-              title="退出登录"
-            >
-              <LogOut className="w-5 h-5" />
-            </button>
-          </div>
+          {/* Empty space for layout balance */}
+          <div className="w-10"></div>
         </div>
 
         {/* Mobile Navigation */}
@@ -77,7 +59,7 @@ export const Header: React.FC<HeaderProps> = ({ user, currentPage, onNavigate, o
               return (
                 <button
                   key={item.id}
-                  onClick={() => onNavigate(item.id as any)}
+                  onClick={() => onNavigate(item.id as 'dashboard' | 'habits' | 'record' | 'settings')}
                   className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-all duration-200 ${
                     currentPage === item.id
                       ? 'bg-blue-100 text-blue-700'

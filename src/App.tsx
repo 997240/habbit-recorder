@@ -1,17 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { LoginPage } from './components/auth/LoginPage';
+import { useState, useEffect } from 'react';
 import { Header } from './components/layout/Header';
 import { Dashboard } from './components/dashboard/Dashboard';
 import { HabitList } from './components/habits/HabitList';
 import { HabitForm } from './components/habits/HabitForm';
 import { RecordPage } from './components/record/RecordPage';
-import { User, Habit, HabitRecord, AppState } from './types';
+import SettingsPage from './components/settings/SettingsPage';
+import { Habit, HabitRecord, AppState } from './types';
 import { storage } from './utils/storage';
 import { generateId, formatDate } from './utils/dateUtils';
 
 function App() {
   const [state, setState] = useState<AppState>({
-    user: null,
     habits: [],
     records: [],
     currentPage: 'dashboard',
@@ -23,47 +22,20 @@ function App() {
   const [showHabitForm, setShowHabitForm] = useState(false);
   const [editingHabit, setEditingHabit] = useState<Habit | undefined>();
 
-  // Load user data on app start
+  // Load data on app start
   useEffect(() => {
-    const savedUser = storage.getUser();
-    if (savedUser) {
-      const habits = storage.getHabits(savedUser.id);
-      const records = storage.getRecords(savedUser.id);
-      setState(prev => ({
-        ...prev,
-        user: savedUser,
-        habits,
-        records
-      }));
-    }
-  }, []);
-
-  // Authentication handlers
-  const handleLogin = (user: User) => {
-    storage.setUser(user);
-    const habits = storage.getHabits(user.id);
-    const records = storage.getRecords(user.id);
+    const habits = storage.getHabits();
+    const records = storage.getRecords();
     setState(prev => ({
       ...prev,
-      user,
       habits,
       records
     }));
-  };
+  }, []);
 
-  const handleLogout = () => {
-    storage.clearUser();
-    setState(prev => ({
-      ...prev,
-      user: null,
-      habits: [],
-      records: [],
-      currentPage: 'dashboard'
-    }));
-  };
 
   // Navigation handler
-  const handleNavigate = (page: 'dashboard' | 'habits' | 'record') => {
+  const handleNavigate = (page: 'dashboard' | 'habits' | 'record' | 'settings') => {
     setState(prev => ({ ...prev, currentPage: page }));
     setShowHabitForm(false);
     setEditingHabit(undefined);
@@ -80,9 +52,7 @@ function App() {
     setShowHabitForm(true);
   };
 
-  const handleSaveHabit = (habitData: Omit<Habit, 'id' | 'userId' | 'createdAt'>) => {
-    if (!state.user) return;
-
+  const handleSaveHabit = (habitData: Omit<Habit, 'id' | 'createdAt'>) => {
     if (editingHabit) {
       // Update existing habit
       const updatedHabit: Habit = {
@@ -96,7 +66,6 @@ function App() {
       // Create new habit
       const newHabit: Habit = {
         id: generateId(),
-        userId: state.user.id,
         createdAt: new Date().toISOString(),
         ...habitData
       };
@@ -126,9 +95,14 @@ function App() {
 
   // Record management handler
   const handleSaveRecord = (recordData: Omit<HabitRecord, 'id' | 'createdAt'>) => {
+    // First check if a record already exists
+    const existingRecord = state.records.find(
+      r => r.habitId === recordData.habitId && r.date === recordData.date
+    );
+
     const newRecord: HabitRecord = {
-      id: generateId(),
-      createdAt: new Date().toISOString(),
+      id: existingRecord ? existingRecord.id : generateId(), // Reuse existing ID if updating
+      createdAt: existingRecord ? existingRecord.createdAt : new Date().toISOString(), // Keep original creation time
       ...recordData
     };
 
@@ -148,9 +122,50 @@ function App() {
     }
   };
 
+  // Batch record management handler
+  const handleSaveAllRecords = (recordsData: Array<Omit<HabitRecord, 'id' | 'createdAt'>>) => {
+    // 批量处理所有记录
+    const newRecords: HabitRecord[] = [];
+    const updatedRecordIds: string[] = [];
+    
+    // 处理每条记录
+    recordsData.forEach(recordData => {
+      // 检查是否已存在
+      const existingRecord = state.records.find(
+        r => r.habitId === recordData.habitId && r.date === recordData.date
+      );
+      
+      // 创建新记录对象
+      const newRecord: HabitRecord = {
+        id: existingRecord ? existingRecord.id : generateId(),
+        createdAt: existingRecord ? existingRecord.createdAt : new Date().toISOString(),
+        ...recordData
+      };
+      
+      // 保存到localStorage
+      storage.addRecord(newRecord);
+      
+      // 收集新记录，用于后续批量更新状态
+      newRecords.push(newRecord);
+      if (existingRecord) {
+        updatedRecordIds.push(existingRecord.id);
+      }
+    });
+    
+    // 一次性更新React状态
+    setState(prev => {
+      // 过滤掉已更新的记录
+      const filteredRecords = prev.records.filter(r => !updatedRecordIds.includes(r.id));
+      // 添加所有新记录
+      return {
+        ...prev,
+        records: [...filteredRecords, ...newRecords]
+      };
+    });
+  };
+
   // Render appropriate page
   const renderCurrentPage = () => {
-    if (!state.user) return null;
 
     switch (state.currentPage) {
       case 'habits':
@@ -169,8 +184,11 @@ function App() {
             habits={state.habits}
             records={state.records}
             onSaveRecord={handleSaveRecord}
+            onSaveAllRecords={handleSaveAllRecords}
           />
         );
+      case 'settings':
+        return <SettingsPage />;
       case 'dashboard':
       default:
         return (
@@ -182,17 +200,12 @@ function App() {
     }
   };
 
-  if (!state.user) {
-    return <LoginPage onLogin={handleLogin} />;
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50">
       <Header
-        user={state.user}
         currentPage={state.currentPage}
         onNavigate={handleNavigate}
-        onLogout={handleLogout}
       />
       
       <main className="container mx-auto px-4 py-8">

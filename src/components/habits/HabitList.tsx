@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Edit3, Archive, MoreHorizontal, Target as TargetIcon } from 'lucide-react';
+import { Plus, Edit3, Archive, Trash2, MoreHorizontal, Target as TargetIcon } from 'lucide-react';
 import { Habit } from '../../types';
 
 interface HabitListProps {
@@ -42,15 +42,15 @@ export const HabitList: React.FC<HabitListProps> = ({
     }
   };
 
-  const HabitCard: React.FC<{ habit: Habit }> = ({ habit }) => (
-    <div className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-all duration-200">
+  const HabitCard: React.FC<{ habit: Habit; isArchived?: boolean }> = ({ habit }) => (
+    <div className={`rounded-xl p-6 hover:shadow-lg transition-all duration-200 ${!habit.isActive ? 'bg-gray-50 border border-gray-200 opacity-90' : 'bg-white border border-gray-200'}`}>
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-start gap-3">
-          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-            <TargetIcon className="w-5 h-5 text-blue-600" />
+          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${!habit.isActive ? 'bg-gray-100' : 'bg-blue-100'}`}>
+            <TargetIcon className={`w-5 h-5 ${!habit.isActive ? 'text-gray-500' : 'text-blue-600'}`} />
           </div>
           <div>
-            <h3 className="font-semibold text-gray-900 mb-1">{habit.name}</h3>
+            <h3 className={`font-semibold mb-1 ${!habit.isActive ? 'text-gray-700' : 'text-gray-900'}`}>{habit.name}</h3>
             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getHabitTypeColor(habit.type)}`}>
               {getHabitTypeLabel(habit.type)}
             </span>
@@ -66,7 +66,7 @@ export const HabitList: React.FC<HabitListProps> = ({
           </button>
           
           {activeMenuId === habit.id && (
-            <div className="absolute right-0 top-10 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10 min-w-[120px]">
+            <div className="absolute right-0 top-10 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-20 min-w-[120px]">
               <button
                 onClick={() => {
                   onEditHabit(habit);
@@ -96,7 +96,7 @@ export const HabitList: React.FC<HabitListProps> = ({
                 }}
                 className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
               >
-                <Archive className="w-4 h-4" />
+                <Trash2 className="w-4 h-4" />
                 删除
               </button>
             </div>
@@ -144,7 +144,7 @@ export const HabitList: React.FC<HabitListProps> = ({
         {activeHabits.length > 0 ? (
           <div className="grid gap-4 md:grid-cols-2">
             {activeHabits.map(habit => (
-              <HabitCard key={habit.id} habit={habit} />
+              <HabitCard key={habit.id} habit={habit} isArchived={false} />
             ))}
           </div>
         ) : (
@@ -171,9 +171,7 @@ export const HabitList: React.FC<HabitListProps> = ({
           </h2>
           <div className="grid gap-4 md:grid-cols-2">
             {archivedHabits.map(habit => (
-              <div key={habit.id} className="opacity-60">
-                <HabitCard habit={habit} />
-              </div>
+              <HabitCard key={habit.id} habit={habit} isArchived={true} />
             ))}
           </div>
         </div>
@@ -182,7 +180,7 @@ export const HabitList: React.FC<HabitListProps> = ({
       {/* Click outside to close menu */}
       {activeMenuId && (
         <div 
-          className="fixed inset-0 z-5" 
+          className="fixed inset-0 z-[-1]" 
           onClick={() => setActiveMenuId(null)}
         />
       )}

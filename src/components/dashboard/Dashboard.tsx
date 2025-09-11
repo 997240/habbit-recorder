@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { BarChart3, Calendar, TrendingUp, Target, Activity } from 'lucide-react';
+import React, { useState } from 'react';
+import { BarChart3 } from 'lucide-react';
 import { Habit, HabitRecord } from '../../types';
 import { HabitChart } from '../charts/HabitChart';
 import { getTimeRangeDates, formatDisplayDate } from '../../utils/dateUtils';
@@ -10,7 +10,7 @@ interface DashboardProps {
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({ habits, records }) => {
-  const [timeRange, setTimeRange] = useState<'week' | 'month' | 'year'>('week');
+  const [timeRange, setTimeRange] = useState<'last7days' | 'week' | 'last30days' | 'month' | 'year'>('week');
   const [chartType, setChartType] = useState<'bar' | 'line'>('bar');
 
   const activeHabits = habits.filter(habit => habit.isActive);
@@ -21,45 +21,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ habits, records }) => {
     record => record.date >= dateRange.start && record.date <= dateRange.end
   );
 
-  // Calculate statistics
-  const stats = useMemo(() => {
-    const totalHabits = activeHabits.length;
-    const recordsInRange = filteredRecords.length;
-    
-    // Calculate completion rate for check-in habits
-    const checkInHabits = activeHabits.filter(habit => habit.type === 'check-in');
-    const checkInRecords = filteredRecords.filter(record => 
-      checkInHabits.find(habit => habit.id === record.habitId)
-    );
-    const completedCheckIns = checkInRecords.filter(record => record.value === true).length;
-    const completionRate = checkInRecords.length > 0 ? (completedCheckIns / checkInRecords.length) * 100 : 0;
-
-    // Calculate streak for most recent habit
-    const todayRecords = records.filter(record => 
-      record.date === new Date().toISOString().split('T')[0]
-    );
-    const todayCompletedHabits = todayRecords.length;
-
-    return {
-      totalHabits,
-      recordsInRange,
-      completionRate,
-      todayCompletedHabits
-    };
-  }, [activeHabits, filteredRecords, records]);
-
-  const StatCard: React.FC<{ icon: React.ReactNode; label: string; value: string; color: string }> = 
-    ({ icon, label, value, color }) => (
-      <div className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-all duration-200">
-        <div className="flex items-center justify-between mb-4">
-          <div className={`p-3 rounded-full ${color}`}>
-            {icon}
-          </div>
-          <span className="text-2xl font-bold text-gray-900">{value}</span>
-        </div>
-        <p className="text-sm font-medium text-gray-600">{label}</p>
-      </div>
-    );
 
   return (
     <div className="max-w-6xl mx-auto p-6">
@@ -69,33 +30,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ habits, records }) => {
         <p className="text-gray-600">追踪您的进度并分析您的习惯模式。</p>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <StatCard
-          icon={<Target className="w-6 h-6 text-blue-600" />}
-          label="活跃习惯"
-          value={stats.totalHabits.toString()}
-          color="bg-blue-100"
-        />
-        <StatCard
-          icon={<Activity className="w-6 h-6 text-green-600" />}
-          label="今日记录"
-          value={stats.todayCompletedHabits.toString()}
-          color="bg-green-100"
-        />
-        <StatCard
-          icon={<TrendingUp className="w-6 h-6 text-purple-600" />}
-          label="完成率"
-          value={`${stats.completionRate.toFixed(0)}%`}
-          color="bg-purple-100"
-        />
-        <StatCard
-          icon={<Calendar className="w-6 h-6 text-orange-600" />}
-          label="本期记录"
-          value={stats.recordsInRange.toString()}
-          color="bg-orange-100"
-        />
-      </div>
 
       {/* Controls */}
       <div className="bg-white rounded-xl border border-gray-200 p-6 mb-8">
@@ -110,7 +44,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ habits, records }) => {
           <div className="flex flex-col sm:flex-row gap-4">
             {/* Time Range Selector */}
             <div className="flex bg-gray-100 rounded-lg p-1">
-              {(['week', 'month', 'year'] as const).map((range) => (
+              {(['last7days', 'week', 'last30days', 'month', 'year'] as const).map((range) => (
                 <button
                   key={range}
                   onClick={() => setTimeRange(range)}
@@ -120,7 +54,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ habits, records }) => {
                       : 'text-gray-600 hover:text-gray-900'
                   }`}
                 >
-                  {range === 'week' ? '本周' : range === 'month' ? '本月' : '本年'}
+                  {range === 'last7days' 
+                    ? '近7天' 
+                    : range === 'week' 
+                    ? '本周' 
+                    : range === 'last30days'
+                    ? '近30天'
+                    : range === 'month' 
+                    ? '本月' 
+                    : '本年'}
                 </button>
               ))}
             </div>

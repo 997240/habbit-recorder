@@ -1,16 +1,7 @@
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  avatar: string;
-  googleId: string;
-}
-
 export type HabitType = 'numeric' | 'duration' | 'time-based' | 'check-in';
 
 export interface Habit {
   id: string;
-  userId: string;
   name: string;
   type: HabitType;
   unit?: string;
@@ -22,7 +13,6 @@ export interface Habit {
 export interface HabitRecord {
   id: string;
   habitId: string;
-  userId: string;
   date: string;
   value: number | string | boolean;
   note?: string;
@@ -30,11 +20,10 @@ export interface HabitRecord {
 }
 
 export interface AppState {
-  user: User | null;
   habits: Habit[];
   records: HabitRecord[];
-  currentPage: 'dashboard' | 'habits' | 'record';
+  currentPage: 'dashboard' | 'habits' | 'record' | 'settings';
   selectedDate: string;
-  timeRange: 'week' | 'month' | 'year' | 'custom';
+  timeRange: 'last7days' | 'week' | 'last30days' | 'month' | 'year' | 'custom';
   customRange: { start: string; end: string };
 }

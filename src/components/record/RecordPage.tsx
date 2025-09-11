@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Calendar, Save, ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Calendar, Save, ChevronLeft, ChevronRight, CheckCircle } from 'lucide-react';
 import { Habit, HabitRecord } from '../../types';
 import { formatDate, formatDisplayDate } from '../../utils/dateUtils';
 
@@ -7,12 +7,13 @@ interface RecordPageProps {
   habits: Habit[];
   records: HabitRecord[];
   onSaveRecord: (record: Omit<HabitRecord, 'id' | 'createdAt'>) => void;
+  onSaveAllRecords: (records: Array<Omit<HabitRecord, 'id' | 'createdAt'>>) => void;
 }
 
-export const RecordPage: React.FC<RecordPageProps> = ({ habits, records, onSaveRecord }) => {
+export const RecordPage: React.FC<RecordPageProps> = ({ habits, records, onSaveAllRecords }) => {
   const [selectedDate, setSelectedDate] = useState<string>(formatDate(new Date()));
   const [recordValues, setRecordValues] = useState<Record<string, any>>({});
-  const [notes, setNotes] = useState<Record<string, string>>({});
+  const [notification, setNotification] = useState<{show: boolean; message: string}>({show: false, message: ''});
 
   const activeHabits = habits.filter(habit => habit.isActive);
 
@@ -20,18 +21,13 @@ export const RecordPage: React.FC<RecordPageProps> = ({ habits, records, onSaveR
   React.useEffect(() => {
     const existingRecords = records.filter(record => record.date === selectedDate);
     const values: Record<string, any> = {};
-    const existingNotes: Record<string, string> = {};
 
     existingRecords.forEach(record => {
       values[record.habitId] = record.value;
-      if (record.note) {
-        existingNotes[record.habitId] = record.note;
-      }
     });
 
     setRecordValues(values);
-    setNotes(existingNotes);
-  }, [selectedDate, records]);
+  }, [selectedDate]);
 
   const handleDateChange = (direction: 'prev' | 'next') => {
     const currentDate = new Date(selectedDate);
@@ -41,24 +37,33 @@ export const RecordPage: React.FC<RecordPageProps> = ({ habits, records, onSaveR
   };
 
   const handleSaveAll = () => {
-    let savedCount = 0;
+    // 收集所有需要保存的记录
+    const recordsToSave: Array<Omit<HabitRecord, 'id' | 'createdAt'>> = [];
     
     activeHabits.forEach(habit => {
       const value = recordValues[habit.id];
-      if (value !== undefined && value !== '' && value !== false) {
-        onSaveRecord({
+      if (value !== undefined && value !== '') {
+        recordsToSave.push({
           habitId: habit.id,
-          userId: habit.userId,
           date: selectedDate,
-          value: value,
-          note: notes[habit.id] || undefined
+          value: value
         });
-        savedCount++;
       }
     });
 
-    if (savedCount > 0) {
-      alert(`已为 ${formatDisplayDate(selectedDate)} 保存 ${savedCount} 条习惯记录`);
+    if (recordsToSave.length > 0) {
+      // 一次性发送所有记录
+      onSaveAllRecords(recordsToSave);
+      // 显示友好的Tailwind提示，而不是弹窗
+      setNotification({
+        show: true, 
+        message: `已为 ${formatDisplayDate(selectedDate)} 保存 ${recordsToSave.length} 条习惯记录`
+      });
+      
+      // 3秒后自动隐藏提示
+      setTimeout(() => {
+        setNotification({show: false, message: ''});
+      }, 3000);
     }
   };
 
@@ -75,7 +80,7 @@ export const RecordPage: React.FC<RecordPageProps> = ({ habits, records, onSaveR
             value={value || ''}
             onChange={(e) => setRecordValues({ ...recordValues, [habit.id]: Number(e.target.value) || 0 })}
             placeholder="输入数值"
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
         );
 
@@ -88,7 +93,7 @@ export const RecordPage: React.FC<RecordPageProps> = ({ habits, records, onSaveR
             value={value || ''}
             onChange={(e) => setRecordValues({ ...recordValues, [habit.id]: Number(e.target.value) || 0 })}
             placeholder="输入时长"
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
         );
 
@@ -98,20 +103,20 @@ export const RecordPage: React.FC<RecordPageProps> = ({ habits, records, onSaveR
             type="time"
             value={value || ''}
             onChange={(e) => setRecordValues({ ...recordValues, [habit.id]: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
         );
 
       case 'check-in':
         return (
-          <label className="flex items-center cursor-pointer">
+          <label className="flex items-center cursor-pointer justify-end">
+            <span className="mr-2 text-sm text-gray-700">已完成</span>
             <input
               type="checkbox"
               checked={value || false}
               onChange={(e) => setRecordValues({ ...recordValues, [habit.id]: e.target.checked })}
-              className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
             />
-            <span className="ml-2 text-sm text-gray-700">已完成</span>
           </label>
         );
 
@@ -128,7 +133,7 @@ export const RecordPage: React.FC<RecordPageProps> = ({ habits, records, onSaveR
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-6">
+    <div className="max-w-2xl mx-auto p-6 relative">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">记录习惯</h1>
@@ -170,42 +175,38 @@ export const RecordPage: React.FC<RecordPageProps> = ({ habits, records, onSaveR
         />
       </div>
 
-      {/* Habits List */}
+      {/* 成功提示消息 */}
+      {notification.show && (
+        <div className="fixed top-4 right-4 left-4 md:left-auto md:w-96 flex items-center p-4 mb-4 bg-green-50 border-l-4 border-green-500 rounded-lg shadow-md transition-all duration-300 z-50">
+          <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
+          <span className="text-green-800">{notification.message}</span>
+        </div>
+      )}
+      
+      {/* Today's Record Card */}
       {activeHabits.length > 0 ? (
-        <div className="space-y-6 mb-8">
-          {activeHabits.map((habit) => (
-            <div key={habit.id} className="bg-white rounded-xl border border-gray-200 p-6">
-              <div className="mb-4">
-                <h3 className="text-lg font-semibold text-gray-900 mb-1">{habit.name}</h3>
-                <p className="text-sm text-gray-600">{getHabitSummary(habit)}</p>
-              </div>
+        <div className="bg-white rounded-xl border border-gray-200 p-6 mb-8">
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">今日记录</h2>
+            <p className="text-sm text-gray-600">{formatDisplayDate(selectedDate)} 的习惯打卡</p>
+          </div>
 
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    数值
-                  </label>
+          <div className="space-y-4 mb-6">
+            {activeHabits.map((habit) => (
+              <div key={habit.id} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-medium text-gray-900">{habit.name}</h3>
+                  <p className="text-sm text-gray-500">{getHabitSummary(habit)}</p>
+                </div>
+                <div className="ml-4 flex-shrink-0 w-32">
                   {renderHabitInput(habit)}
                 </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    备注（可选）
-                  </label>
-                  <input
-                    type="text"
-                    value={notes[habit.id] || ''}
-                    onChange={(e) => setNotes({ ...notes, [habit.id]: e.target.value })}
-                    placeholder="添加备注..."
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
 
           {/* Save Button */}
-          <div className="flex justify-center">
+          <div className="flex justify-center pt-4 border-t border-gray-100">
             <button
               onClick={handleSaveAll}
               className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-all duration-200"
