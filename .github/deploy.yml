@@ -6,7 +6,7 @@ on:
   push:
     branches: ['main']
 
-  # 允许你从 Actions 页签手动运行这个工作流
+  # 允许你从 Actions 页签手动运行这个工作流...
   workflow_dispatch:
 
 # 设置 GITHUB_TOKEN 的权限，以允许部署到 GitHub Pages
