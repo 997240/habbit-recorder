@@ -195,6 +195,7 @@ function App() {
           <Dashboard
             habits={state.habits}
             records={state.records}
+            onNavigate={handleNavigate}
           />
         );
     }

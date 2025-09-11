@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Download, Trash2, Database, AlertTriangle } from 'lucide-react';
+import { Download, Trash2, Database, AlertTriangle, Upload } from 'lucide-react';
 import { storage } from '../../utils/storage';
 export const SettingsPage: React.FC = () => {
   const [importing, setImporting] = useState(false);
   const [importMessage, setImportMessage] = useState('');
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const handleExport = async () => {
     try {
@@ -119,13 +120,15 @@ export const SettingsPage: React.FC = () => {
               <p className="text-sm text-gray-600 mb-3">
                 将所有习惯和记录数据导出为 JSON 文件，可用于备份或迁移到其他设备。
               </p>
-              <button 
-                onClick={handleExport} 
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center"
-              >
-                <Download className="h-4 w-4 mr-2" />
-                导出数据
-              </button>
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={handleExport}
+                  className="px-4 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-all duration-200 flex items-center"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  导出数据
+                </button>
+              </div>
             </div>
 
             <div>
@@ -133,16 +136,25 @@ export const SettingsPage: React.FC = () => {
               <p className="text-sm text-gray-600 mb-3">
                 从之前导出的 JSON 文件恢复数据。注意：这将覆盖当前所有数据。
               </p>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".json"
+                onChange={handleImport}
+                disabled={importing}
+                className="hidden"
+              />
               <div className="flex items-center space-x-4">
-                <input
-                  type="file"
-                  accept=".json"
-                  onChange={handleImport}
+                <button
+                  onClick={() => fileInputRef.current?.click()}
                   disabled={importing}
-                  className="max-w-xs"
-                />
+                  className="px-4 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center"
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  {importing ? '导入中...' : '选择文件导入'}
+                </button>
                 {importing && (
-                  <span className="text-sm text-gray-500">导入中...</span>
+                  <span className="text-sm text-gray-500">处理中...</span>
                 )}
               </div>
               {importMessage && (
@@ -196,9 +208,9 @@ export const SettingsPage: React.FC = () => {
             <p className="text-sm text-gray-600 mb-3">
               这将永久删除所有习惯和记录数据，此操作不可恢复。
             </p>
-            <button 
+            <button
               onClick={handleClearData}
-              className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 flex items-center"
+              className="px-4 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-all duration-200 flex items-center"
             >
               <Trash2 className="h-4 w-4 mr-2" />
               清空所有数据

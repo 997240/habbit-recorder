@@ -33,6 +33,9 @@ export const HabitForm: React.FC<HabitFormProps> = ({ habit, onSave, onCancel })
     e.preventDefault();
     if (!formData.name.trim()) return;
 
+    // 验证目标字段（排除check-in类型）
+    if (formData.type !== 'check-in' && !formData.target.trim()) return;
+
     const habitData = {
       name: formData.name.trim(),
       type: formData.type,
@@ -45,10 +48,10 @@ export const HabitForm: React.FC<HabitFormProps> = ({ habit, onSave, onCancel })
   };
 
   const habitTypes = [
-    { value: 'numeric', label: 'Numeric', description: 'Track numbers (e.g., push-ups, pages read)' },
-    { value: 'duration', label: 'Duration', description: 'Track time spent (e.g., meditation, exercise)' },
-    { value: 'time-based', label: 'Time Point', description: 'Track specific times (e.g., bedtime, wake up)' },
-    { value: 'check-in', label: 'Check-in', description: 'Simple completion tracking (done/not done)' }
+    { value: 'numeric', label: '数值', description: '追踪数字（如：俯卧撑、深蹲、番茄钟次数）' },
+    { value: 'duration', label: '时长', description: '追踪花费的时间（如：冥想、锻炼、瑜伽）' },
+    { value: 'time-based', label: '时间点', description: '追踪特定的时间[睡眠记录]（如：睡觉、起床）' },
+    { value: 'check-in', label: '签到', description: '简单的完成与否追踪（如：是否喝牛奶、吃苹果）' }
   ];
 
   return (
@@ -140,7 +143,7 @@ export const HabitForm: React.FC<HabitFormProps> = ({ habit, onSave, onCancel })
             {/* Target */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                每日目标（可选）
+                {formData.type === 'check-in' ? '每日目标（签到类型无需设置）' : '每日目标 *'}
               </label>
               {formData.type === 'time-based' ? (
                 <input

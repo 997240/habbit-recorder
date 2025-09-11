@@ -7,9 +7,10 @@ import { getTimeRangeDates, formatDisplayDate } from '../../utils/dateUtils';
 interface DashboardProps {
   habits: Habit[];
   records: HabitRecord[];
+  onNavigate?: (page: 'dashboard' | 'habits' | 'record' | 'settings') => void;
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ habits, records }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ habits, records, onNavigate }) => {
   const [timeRange, setTimeRange] = useState<'last7days' | 'week' | 'last30days' | 'month' | 'year'>('week');
   const [chartType, setChartType] = useState<'bar' | 'line'>('bar');
 
@@ -114,7 +115,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ habits, records }) => {
         <div className="text-center py-12 bg-gray-50 rounded-xl">
           <BarChart3 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">暂无习惯可显示</h3>
-          <p className="text-gray-600">创建一些习惯来开始查看您的进度分析。</p>
+          <p className="text-gray-600 mb-6">开始您的习惯养成之旅！</p>
+          <button
+            onClick={() => onNavigate?.('habits')}
+            className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors duration-200"
+          >
+            创建我的第一个习惯
+          </button>
         </div>
       )}
     </div>
