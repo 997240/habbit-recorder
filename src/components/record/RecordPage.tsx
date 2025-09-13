@@ -185,7 +185,7 @@ export const RecordPage: React.FC = () => {
             
             {/* 输入框列表 */}
             {values.map((v) => (
-              <div key={v.id} className="flex items-center gap-2 sm:gap-3">
+              <div key={v.id} className="flex items-center gap-2 sm:gap-3 w-full">
                 <input
                   type="number"
                   min="0"
@@ -229,25 +229,29 @@ export const RecordPage: React.FC = () => {
 
       case 'time-based':
         return (
-          <input
-            type="time"
-            value={value || ''}
-            onChange={(e) => setRecordValues({ ...recordValues, [habit.id]: e.target.value })}
-            className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          />
+          <div className="w-full flex justify-end">
+            <input
+              type="time"
+              value={value || ''}
+              onChange={(e) => setRecordValues({ ...recordValues, [habit.id]: e.target.value })}
+              className="px-2 py-1.5 text-sm border border-gray-200 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
         );
 
       case 'check-in':
         return (
-          <label className="flex items-center cursor-pointer justify-end">
-            <span className="mr-2 text-sm text-gray-700">已完成</span>
-            <input
-              type="checkbox"
-              checked={value || false}
-              onChange={(e) => setRecordValues({ ...recordValues, [habit.id]: e.target.checked })}
-              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-            />
-          </label>
+          <div className="w-full flex justify-end">
+            <label className="flex items-center cursor-pointer">
+              <span className="mr-2 text-sm text-gray-700">已完成</span>
+              <input
+                type="checkbox"
+                checked={value || false}
+                onChange={(e) => setRecordValues({ ...recordValues, [habit.id]: e.target.checked })}
+                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              />
+            </label>
+          </div>
         );
 
       default:
@@ -323,12 +327,12 @@ export const RecordPage: React.FC = () => {
 
           <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
             {activeHabits.map((habit) => (
-              <div key={habit.id} className="flex flex-col sm:flex-row sm:items-center justify-between py-3 border-b border-gray-100 last:border-b-0 gap-3 sm:gap-0">
+              <div key={habit.id} className="flex flex-row items-center justify-between py-3 border-b border-gray-100 last:border-b-0 gap-3">
                 <div className="flex-1 min-w-0">
                   <h3 className="font-medium text-gray-900">{habit.name}</h3>
                   <p className="text-sm text-gray-500">{getHabitSummary(habit)}</p>
                 </div>
-                <div className="sm:ml-4 flex-shrink-0 w-full sm:w-48">
+                <div className="ml-4 flex-shrink-0 w-48">
                   {renderHabitInput(habit)}
                 </div>
               </div>
