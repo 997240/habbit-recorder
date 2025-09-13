@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calendar, Save, ChevronLeft, ChevronRight, CheckCircle, Plus, Minus } from 'lucide-react';
+import { Calendar, Save, ChevronLeft, ChevronRight, CheckCircle, Plus, Minus, ChevronDown, ChevronUp } from 'lucide-react';
 import { Habit, HabitRecord } from '../../types';
 import { formatDate, formatDisplayDate, generateId } from '../../utils/dateUtils';
 import { useHabitStore } from '../../stores/habitStore';
@@ -14,8 +14,60 @@ export const RecordPage: React.FC = () => {
   // 为数值型和时长型习惯存储多个输入值
   const [multipleValues, setMultipleValues] = useState<Record<string, Array<{id: string, value: number | string}>>>({});
   const [notification, setNotification] = useState<{show: boolean; message: string}>({show: false, message: ''});
+  const [showCompleted, setShowCompleted] = useState(true);
+  const [showNotCompleted, setShowNotCompleted] = useState(true);
 
   const activeHabits = habits.filter(habit => habit.isActive);
+
+  // 使用 useMemo 计算已完成和未完成的习惯
+  const { completedHabits, notCompletedHabits } = React.useMemo(() => {
+    const completed: Habit[] = [];
+    const notCompleted: Habit[] = [];
+
+    activeHabits.forEach(habit => {
+      switch (habit.type) {
+        case 'check-in':
+          if (recordValues[habit.id] === true) {
+            completed.push(habit);
+          } else {
+            notCompleted.push(habit);
+          }
+          break;
+        case 'time-based':
+          if (recordValues[habit.id] && recordValues[habit.id] !== '') {
+            completed.push(habit);
+          } else {
+            notCompleted.push(habit);
+          }
+          break;
+        case 'numeric':
+        case 'duration':
+          const values = multipleValues[habit.id] || [];
+          const totalValue = values.reduce((sum, v) => sum + (typeof v.value === 'number' ? v.value : 0), 0);
+          
+          if (habit.target) {
+            // 如果设置了目标，需要达到目标值才算完成
+            if (totalValue >= Number(habit.target)) {
+              completed.push(habit);
+            } else {
+              notCompleted.push(habit);
+            }
+          } else {
+            // 如果没有设置目标，只要有记录就算完成
+            if (totalValue > 0) {
+              completed.push(habit);
+            } else {
+              notCompleted.push(habit);
+            }
+          }
+          break;
+        default:
+          notCompleted.push(habit);
+      }
+    });
+
+    return { completedHabits: completed, notCompletedHabits: notCompleted };
+  }, [activeHabits, recordValues, multipleValues, selectedDate]);
 
   // Load existing records for the selected date
   React.useEffect(() => {
@@ -316,6 +368,135 @@ export const RecordPage: React.FC = () => {
           <span className="text-green-800">{notification.message}</span>
         </div>
       )}
+
+      {/* 完成状态概览 */}
+      <div className="space-y-4 mb-6 sm:mb-8">
+        {/* 已完成列表 */}
+        <div className="bg-white rounded-xl border border-gray-200">
+          <button
+            onClick={() => setShowCompleted(!showCompleted)}
+            className="w-full flex items-center justify-between p-4 sm:p-6 hover:bg-gray-50 transition-colors duration-200"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+              <h3 className="font-semibold text-gray-900">已完成 ({completedHabits.length})</h3>
+            </div>
+            {showCompleted ? (
+              <ChevronUp className="w-5 h-5 text-gray-400" />
+            ) : (
+              <ChevronDown className="w-5 h-5 text-gray-400" />
+            )}
+          </button>
+          {showCompleted && (
+            <div className="px-4 sm:px-6 pb-4 sm:pb-6 border-t border-gray-100">
+              {completedHabits.length > 0 ? (
+                <div className="space-y-2 mt-4">
+                  {completedHabits.map((habit) => {
+                    let displayText = habit.name;
+                    
+                    switch (habit.type) {
+                      case 'numeric':
+                      case 'duration':
+                        const values = multipleValues[habit.id] || [];
+                        const totalValue = values.reduce((sum, v) => sum + (typeof v.value === 'number' ? v.value : 0), 0);
+                        if (habit.target) {
+                          displayText += ` - ${totalValue}/${habit.target}${habit.unit ? ` ${habit.unit}` : ''}`;
+                        } else {
+                          displayText += ` - ${totalValue}${habit.unit ? ` ${habit.unit}` : ''}`;
+                        }
+                        break;
+                      case 'time-based':
+                        const timeValue = recordValues[habit.id];
+                        if (timeValue) {
+                          displayText += ` - ${timeValue}`;
+                        }
+                        break;
+                      case 'check-in':
+                      default:
+                        // 签到型只显示名称
+                        break;
+                    }
+                    
+                    return (
+                      <div key={habit.id} className="flex items-center gap-3 py-2 text-sm text-gray-700">
+                        <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                        <span>{displayText}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="mt-4 text-center text-sm text-gray-500 py-4">
+                  暂无已完成的习惯
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* 未完成列表 */}
+        <div className="bg-white rounded-xl border border-gray-200">
+          <button
+            onClick={() => setShowNotCompleted(!showNotCompleted)}
+            className="w-full flex items-center justify-between p-4 sm:p-6 hover:bg-gray-50 transition-colors duration-200"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
+              <h3 className="font-semibold text-gray-900">未完成 ({notCompletedHabits.length})</h3>
+            </div>
+            {showNotCompleted ? (
+              <ChevronUp className="w-5 h-5 text-gray-400" />
+            ) : (
+              <ChevronDown className="w-5 h-5 text-gray-400" />
+            )}
+          </button>
+          {showNotCompleted && (
+            <div className="px-4 sm:px-6 pb-4 sm:pb-6 border-t border-gray-100">
+              {notCompletedHabits.length > 0 ? (
+                <div className="space-y-2 mt-4">
+                  {notCompletedHabits.map((habit) => {
+                    let displayText = habit.name;
+                    
+                    switch (habit.type) {
+                      case 'numeric':
+                      case 'duration':
+                        const values = multipleValues[habit.id] || [];
+                        const totalValue = values.reduce((sum, v) => sum + (typeof v.value === 'number' ? v.value : 0), 0);
+                        if (habit.target) {
+                          displayText += ` - ${totalValue}/${habit.target}${habit.unit ? ` ${habit.unit}` : ''}`;
+                        } else {
+                          displayText += ` - ${totalValue}${habit.unit ? ` ${habit.unit}` : ''}`;
+                        }
+                        break;
+                      case 'time-based':
+                        const timeValue = recordValues[habit.id];
+                        if (timeValue) {
+                          displayText += ` - ${timeValue}`;
+                        }
+                        break;
+                      case 'check-in':
+                      default:
+                        // 签到型只显示名称
+                        break;
+                    }
+                    
+                    return (
+                      <div key={habit.id} className="flex items-center gap-3 py-2 text-sm text-gray-700">
+                        <div className="w-4 h-4 border-2 border-gray-300 rounded-full flex-shrink-0"></div>
+                        <span>{displayText}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="mt-4 text-center text-sm text-gray-500 py-4">
+                  所有习惯都已完成！
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
       
       {/* Today's Record Card */}
       {activeHabits.length > 0 ? (
