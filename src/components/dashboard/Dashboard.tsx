@@ -12,6 +12,7 @@ export const Dashboard: React.FC = () => {
   const navigateTo = useUIStore(state => state.navigateTo);
   const [timeRange, setTimeRange] = useState<'last7days' | 'week' | 'last30days' | 'month' | 'year'>('week');
   const [chartType, setChartType] = useState<'bar' | 'line'>('bar');
+  const [selectedHabitType, setSelectedHabitType] = useState<string>('all');
 
   const activeHabits = habits.filter(habit => habit.isActive);
   const dateRange = getTimeRangeDates(timeRange);
@@ -20,6 +21,17 @@ export const Dashboard: React.FC = () => {
   const filteredRecords = records.filter(
     record => record.date >= dateRange.start && record.date <= dateRange.end
   );
+
+  // 从活跃习惯中提取所有唯一的类型
+  const habitTypes = ['all', ...Array.from(new Set(activeHabits.map(h => h.type)))];
+  
+  // 根据选择的类型过滤习惯列表
+  const habitsToDisplay = activeHabits.filter(habit => {
+    if (selectedHabitType === 'all') {
+      return true; // 如果是'all'，不过滤
+    }
+    return habit.type === selectedHabitType; // 否则只显示匹配类型的习惯
+  });
 
 
   return (
@@ -42,6 +54,23 @@ export const Dashboard: React.FC = () => {
           </div>
           
           <div className="flex flex-col sm:flex-row gap-4">
+            {/* Habit Type Selector */}
+            <div className="flex bg-gray-100 rounded-lg p-1">
+              {habitTypes.map((type) => (
+                <button
+                  key={type}
+                  onClick={() => setSelectedHabitType(type)}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                    selectedHabitType === type
+                      ? 'bg-white text-blue-600 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  {type === 'all' ? '全部' : getHabitTypeLabel(type)}
+                </button>
+              ))}
+            </div>
+            
             {/* Time Range Selector */}
             <div className="flex bg-gray-100 rounded-lg p-1">
               {(['last7days', 'week', 'last30days', 'month', 'year'] as const).map((range) => (
@@ -88,9 +117,9 @@ export const Dashboard: React.FC = () => {
       </div>
 
       {/* Charts */}
-      {activeHabits.length > 0 ? (
+      {habitsToDisplay.length > 0 ? (
         <div className="space-y-4 sm:space-y-8">
-          {activeHabits.map((habit) => (
+          {habitsToDisplay.map((habit) => (
             <div key={habit.id} className="bg-white rounded-xl border border-gray-200 p-2 sm:p-6">
               <div className="mb-4 sm:mb-6">
                 <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">{habit.name}</h3>
