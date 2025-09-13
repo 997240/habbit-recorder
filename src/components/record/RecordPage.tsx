@@ -185,7 +185,7 @@ export const RecordPage: React.FC = () => {
             
             {/* 输入框列表 */}
             {values.map((v) => (
-              <div key={v.id} className="flex items-center gap-2">
+              <div key={v.id} className="flex items-center gap-2 sm:gap-3">
                 <input
                   type="number"
                   min="0"
@@ -193,12 +193,21 @@ export const RecordPage: React.FC = () => {
                   value={v.value || ''}
                   onChange={(e) => updateInputValue(habit.id, v.id, Number(e.target.value) || 0)}
                   placeholder={habit.type === 'numeric' ? "输入数值" : "输入时长"}
-                  className="flex-1 px-2 py-1.5 text-sm border border-gray-200 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-0"
                 />
                 <button
                   type="button"
-                  onClick={() => removeInputField(habit.id, v.id)}
-                  className="flex items-center justify-center w-8 h-8 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all duration-200 group"
+                  onClick={() => {
+                    removeInputField(habit.id, v.id);
+                    setNotification({
+                      show: true,
+                      message: '已删除一条记录'
+                    });
+                    setTimeout(() => {
+                      setNotification({show: false, message: ''});
+                    }, 2000);
+                  }}
+                  className="flex-shrink-0 flex items-center justify-center w-9 h-9 sm:w-8 sm:h-8 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all duration-200 group touch-manipulation"
                   title="删除这条记录"
                 >
                   <Minus className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
