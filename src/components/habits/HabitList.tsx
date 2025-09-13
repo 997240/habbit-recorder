@@ -1,22 +1,16 @@
 import React, { useState } from 'react';
 import { Plus, Edit3, Archive, Trash2, MoreHorizontal, Target as TargetIcon } from 'lucide-react';
 import { Habit } from '../../types';
+import { useHabitStore } from '../../stores/habitStore';
+import { useUIStore } from '../../stores/uiStore';
 
-interface HabitListProps {
-  habits: Habit[];
-  onCreateHabit: () => void;
-  onEditHabit: (habit: Habit) => void;
-  onToggleActive: (habitId: string) => void;
-  onDeleteHabit: (habitId: string) => void;
-}
-
-export const HabitList: React.FC<HabitListProps> = ({
-  habits,
-  onCreateHabit,
-  onEditHabit,
-  onToggleActive,
-  onDeleteHabit
-}) => {
+export const HabitList: React.FC = () => {
+  // 使用 selector 精确订阅需要的状态
+  const habits = useHabitStore(state => state.habits);
+  const deleteHabit = useHabitStore(state => state.deleteHabit);
+  const toggleHabitActive = useHabitStore(state => state.toggleHabitActive);
+  
+  const openHabitForm = useUIStore(state => state.openHabitForm);
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
 
   const activeHabits = habits.filter(habit => habit.isActive);
@@ -69,7 +63,7 @@ export const HabitList: React.FC<HabitListProps> = ({
             <div className="absolute right-0 top-10 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-20 min-w-[120px]">
               <button
                 onClick={() => {
-                  onEditHabit(habit);
+                  openHabitForm(habit);
                   setActiveMenuId(null);
                 }}
                 className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
@@ -79,7 +73,7 @@ export const HabitList: React.FC<HabitListProps> = ({
               </button>
               <button
                 onClick={() => {
-                  onToggleActive(habit.id);
+                  toggleHabitActive(habit.id);
                   setActiveMenuId(null);
                 }}
                 className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
@@ -90,7 +84,7 @@ export const HabitList: React.FC<HabitListProps> = ({
               <button
                 onClick={() => {
                   if (confirm('确定要删除这个习惯吗？此操作无法撤销。')) {
-                    onDeleteHabit(habit.id);
+                    deleteHabit(habit.id);
                     setActiveMenuId(null);
                   }
                 }}
@@ -128,7 +122,7 @@ export const HabitList: React.FC<HabitListProps> = ({
           <p className="text-gray-600">创建和管理您的日常习惯和例行公事。</p>
         </div>
         <button
-          onClick={onCreateHabit}
+          onClick={() => openHabitForm()}
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-all duration-200"
         >
           <Plus className="w-4 h-4" />
@@ -153,7 +147,7 @@ export const HabitList: React.FC<HabitListProps> = ({
             <h3 className="text-lg font-medium text-gray-900 mb-2">暂无活跃习惯</h3>
             <p className="text-gray-600 mb-4">创建您的第一个习惯来开始追踪进度。</p>
             <button
-              onClick={onCreateHabit}
+              onClick={() => openHabitForm()}
               className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-all duration-200"
             >
               <Plus className="w-4 h-4" />

@@ -1,12 +1,11 @@
 import React from 'react';
 import { Target, BarChart3, Calendar, List, Cog } from 'lucide-react';
+import { useUIStore } from '../../stores/uiStore';
 
-interface HeaderProps {
-  currentPage: string;
-  onNavigate: (page: 'dashboard' | 'habits' | 'record' | 'settings') => void;
-}
-
-export const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
+export const Header: React.FC = () => {
+  // 使用 selector 精确订阅需要的状态
+  const currentPage = useUIStore(state => state.currentPage);
+  const navigateTo = useUIStore(state => state.navigateTo);
   const navItems = [
     { id: 'dashboard', label: '仪表板', icon: BarChart3 },
     { id: 'record', label: '记录', icon: Calendar },
@@ -33,7 +32,7 @@ export const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
               return (
                 <button
                   key={item.id}
-                  onClick={() => onNavigate(item.id as 'dashboard' | 'habits' | 'record' | 'settings')}
+                  onClick={() => navigateTo(item.id as 'dashboard' | 'habits' | 'record' | 'settings')}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
                     currentPage === item.id
                       ? 'bg-blue-100 text-blue-700 shadow-sm'
@@ -59,7 +58,7 @@ export const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
               return (
                 <button
                   key={item.id}
-                  onClick={() => onNavigate(item.id as 'dashboard' | 'habits' | 'record' | 'settings')}
+                  onClick={() => navigateTo(item.id as 'dashboard' | 'habits' | 'record' | 'settings')}
                   className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-all duration-200 ${
                     currentPage === item.id
                       ? 'bg-blue-100 text-blue-700'

@@ -2,15 +2,13 @@ import React, { useState } from 'react';
 import { Calendar, Save, ChevronLeft, ChevronRight, CheckCircle, Plus, Minus } from 'lucide-react';
 import { Habit, HabitRecord } from '../../types';
 import { formatDate, formatDisplayDate, generateId } from '../../utils/dateUtils';
+import { useHabitStore } from '../../stores/habitStore';
 
-interface RecordPageProps {
-  habits: Habit[];
-  records: HabitRecord[];
-  onSaveRecord: (record: Omit<HabitRecord, 'id' | 'createdAt'>) => void;
-  onSaveAllRecords: (records: Array<Omit<HabitRecord, 'id' | 'createdAt'>>) => void;
-}
-
-export const RecordPage: React.FC<RecordPageProps> = ({ habits, records, onSaveAllRecords }) => {
+export const RecordPage: React.FC = () => {
+  // 使用 selector 精确订阅需要的状态
+  const habits = useHabitStore(state => state.habits);
+  const records = useHabitStore(state => state.records);
+  const addMultipleRecords = useHabitStore(state => state.addMultipleRecords);
   const [selectedDate, setSelectedDate] = useState<string>(formatDate(new Date()));
   const [recordValues, setRecordValues] = useState<Record<string, any>>({});
   // 为数值型和时长型习惯存储多个输入值
@@ -63,8 +61,11 @@ export const RecordPage: React.FC<RecordPageProps> = ({ habits, records, onSaveA
       if (habit.type === 'numeric' || habit.type === 'duration') {
         // 处理多值记录
         const values = multipleValues[habit.id];
+        const existingRecord = records.find(r => r.habitId === habit.id && r.date === selectedDate);
+        
         if (values && values.length > 0) {
-          const validValues = values.filter(v => v.value !== '' && v.value !== 0);
+          // 修改过滤条件：允许值为0的记录被保存，只过滤空字符串
+          const validValues = values.filter(v => v.value !== '');
           if (validValues.length > 0) {
             recordsToSave.push({
               habitId: habit.id,
@@ -76,6 +77,13 @@ export const RecordPage: React.FC<RecordPageProps> = ({ habits, records, onSaveA
               }))
             });
           }
+        } else if (existingRecord) {
+          // 用户删除了所有输入框但之前有记录，保存空值数组表示清零
+          recordsToSave.push({
+            habitId: habit.id,
+            date: selectedDate,
+            values: []
+          });
         }
       } else {
         // 处理单值记录（时间点型和签到型）
@@ -95,8 +103,23 @@ export const RecordPage: React.FC<RecordPageProps> = ({ habits, records, onSaveA
     });
 
     if (recordsToSave.length > 0) {
-      // 一次性发送所有记录
-      onSaveAllRecords(recordsToSave);
+      // 批量处理所有记录
+      const newRecords: HabitRecord[] = recordsToSave.map(recordData => {
+        // 检查是否已存在
+        const existingRecord = records.find(
+          r => r.habitId === recordData.habitId && r.date === recordData.date
+        );
+        
+        // 创建新记录对象
+        return {
+          id: existingRecord ? existingRecord.id : generateId(),
+          createdAt: existingRecord ? existingRecord.createdAt : new Date().toISOString(),
+          ...recordData
+        };
+      });
+      
+      // 一次性保存所有记录
+      addMultipleRecords(newRecords);
       // 显示友好的Tailwind提示，而不是弹窗
       setNotification({
         show: true, 
@@ -166,7 +189,7 @@ export const RecordPage: React.FC<RecordPageProps> = ({ habits, records, onSaveA
                 <input
                   type="number"
                   min="0"
-                  step={habit.type === 'numeric' ? "0.1" : "1"}
+                  step={habit.type === 'numeric' ? "1" : "1"}
                   value={v.value || ''}
                   onChange={(e) => updateInputValue(habit.id, v.id, Number(e.target.value) || 0)}
                   placeholder={habit.type === 'numeric' ? "输入数值" : "输入时长"}
@@ -175,9 +198,10 @@ export const RecordPage: React.FC<RecordPageProps> = ({ habits, records, onSaveA
                 <button
                   type="button"
                   onClick={() => removeInputField(habit.id, v.id)}
-                  className="p-1.5 text-red-500 hover:bg-red-50 rounded transition-colors"
+                  className="flex items-center justify-center w-8 h-8 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all duration-200 group"
+                  title="删除这条记录"
                 >
-                  <Minus className="w-4 h-4" />
+                  <Minus className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
                 </button>
               </div>
             ))}

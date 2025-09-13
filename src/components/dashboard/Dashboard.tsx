@@ -1,16 +1,15 @@
 import React, { useState } from 'react';
 import { BarChart3 } from 'lucide-react';
-import { Habit, HabitRecord } from '../../types';
 import { HabitChart } from '../charts/HabitChart';
 import { getTimeRangeDates, formatDisplayDate } from '../../utils/dateUtils';
+import { useHabitStore } from '../../stores/habitStore';
+import { useUIStore } from '../../stores/uiStore';
 
-interface DashboardProps {
-  habits: Habit[];
-  records: HabitRecord[];
-  onNavigate?: (page: 'dashboard' | 'habits' | 'record' | 'settings') => void;
-}
-
-export const Dashboard: React.FC<DashboardProps> = ({ habits, records, onNavigate }) => {
+export const Dashboard: React.FC = () => {
+  // 使用 selector 精确订阅需要的状态
+  const habits = useHabitStore(state => state.habits);
+  const records = useHabitStore(state => state.records);
+  const navigateTo = useUIStore(state => state.navigateTo);
   const [timeRange, setTimeRange] = useState<'last7days' | 'week' | 'last30days' | 'month' | 'year'>('week');
   const [chartType, setChartType] = useState<'bar' | 'line'>('bar');
 
@@ -117,7 +116,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ habits, records, onNavigat
           <h3 className="text-lg font-medium text-gray-900 mb-2">暂无习惯可显示</h3>
           <p className="text-gray-600 mb-6">开始您的习惯养成之旅！</p>
           <button
-            onClick={() => onNavigate?.('habits')}
+            onClick={() => navigateTo('habits')}
             className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors duration-200"
           >
             创建我的第一个习惯

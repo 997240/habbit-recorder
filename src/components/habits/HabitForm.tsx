@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, Target as TargetIcon } from 'lucide-react';
-import { Habit, HabitType } from '../../types';
+import { HabitType } from '../../types';
+import { useUIStore } from '../../stores/uiStore';
+import { useHabitStore } from '../../stores/habitStore';
+import { generateId } from '../../utils/dateUtils';
 
-interface HabitFormProps {
-  habit?: Habit;
-  onSave: (habit: Omit<Habit, 'id' | 'userId' | 'createdAt'>) => void;
-  onCancel: () => void;
-}
-
-export const HabitForm: React.FC<HabitFormProps> = ({ habit, onSave, onCancel }) => {
+export const HabitForm: React.FC = () => {
+  // 从 store 获取状态和方法
+  const { showHabitForm, editingHabit, closeHabitForm } = useUIStore();
+  const { addHabit, updateHabit } = useHabitStore();
+  
+  // Hooks 必须始终执行，不能有条件性跳过
   const [formData, setFormData] = useState({
     name: '',
     type: 'numeric' as HabitType,
@@ -18,16 +20,24 @@ export const HabitForm: React.FC<HabitFormProps> = ({ habit, onSave, onCancel })
   });
 
   useEffect(() => {
-    if (habit) {
+    if (editingHabit) {
       setFormData({
-        name: habit.name,
-        type: habit.type,
-        unit: habit.unit || '',
-        target: habit.target?.toString() || '',
-        isActive: habit.isActive
+        name: editingHabit.name,
+        type: editingHabit.type,
+        unit: editingHabit.unit || '',
+        target: editingHabit.target?.toString() || '',
+        isActive: editingHabit.isActive
+      });
+    } else {
+      setFormData({
+        name: '',
+        type: 'numeric',
+        unit: '',
+        target: '',
+        isActive: true
       });
     }
-  }, [habit]);
+  }, [editingHabit]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +54,25 @@ export const HabitForm: React.FC<HabitFormProps> = ({ habit, onSave, onCancel })
       isActive: formData.isActive
     };
 
-    onSave(habitData);
+    // 直接调用 store 方法
+    if (editingHabit) {
+      // 更新现有习惯
+      const updatedHabit = {
+        ...editingHabit,
+        ...habitData
+      };
+      updateHabit(updatedHabit);
+    } else {
+      // 创建新习惯
+      const newHabit = {
+        id: generateId(),
+        createdAt: new Date().toISOString(),
+        ...habitData
+      };
+      addHabit(newHabit);
+    }
+    
+    closeHabitForm();
   };
 
   const habitTypes = [
@@ -53,6 +81,9 @@ export const HabitForm: React.FC<HabitFormProps> = ({ habit, onSave, onCancel })
     { value: 'time-based', label: '时间点', description: '追踪特定的时间[睡眠记录]（如：睡觉、起床）' },
     { value: 'check-in', label: '打卡', description: '简单的完成与否追踪（如：是否去健身房、喝牛奶、吃苹果）' }
   ];
+
+  // 如果表单未显示，返回 null
+  if (!showHabitForm) return null;
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
@@ -65,11 +96,11 @@ export const HabitForm: React.FC<HabitFormProps> = ({ habit, onSave, onCancel })
                 <TargetIcon className="w-5 h-5 text-blue-600" />
               </div>
               <h2 className="text-xl font-semibold text-gray-900">
-                {habit ? '编辑习惯' : '新建习惯'}
+                {editingHabit ? '编辑习惯' : '新建习惯'}
               </h2>
             </div>
             <button
-              onClick={onCancel}
+              onClick={closeHabitForm}
               className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all duration-200"
             >
               <X className="w-5 h-5" />
@@ -171,7 +202,7 @@ export const HabitForm: React.FC<HabitFormProps> = ({ habit, onSave, onCancel })
             <div className="flex gap-3 pt-4">
               <button
                 type="button"
-                onClick={onCancel}
+                onClick={closeHabitForm}
                 className="flex-1 px-4 py-3 text-gray-700 bg-gray-100 rounded-lg font-medium hover:bg-gray-200 transition-all duration-200"
               >
                 取消
@@ -181,7 +212,7 @@ export const HabitForm: React.FC<HabitFormProps> = ({ habit, onSave, onCancel })
                 className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-all duration-200"
               >
                 <Save className="w-4 h-4" />
-                {habit ? '更新' : '创建'}习惯
+                {editingHabit ? '更新' : '创建'}习惯
               </button>
             </div>
           </form>
