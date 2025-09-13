@@ -100,9 +100,26 @@ export const HabitChart: React.FC<HabitChartProps> = ({ habit, records, timeRang
                 <span className="block mt-1">
                   {data.value === 0 
                     ? '准时' 
-                    : data.value > 0 
-                      ? `早了 ${Math.floor(Math.abs(data.value) / 60)}小时${Math.abs(data.value) % 60}分钟` 
-                      : `晚了 ${Math.floor(Math.abs(data.value) / 60)}小时${Math.abs(data.value) % 60}分钟`
+                    : (() => {
+                        // 计算小时和分钟
+                        const totalMinutes = Math.abs(data.value);
+                        const hours = Math.floor(totalMinutes / 60);
+                        const minutes = totalMinutes % 60;
+                        
+                        // 构建人性化的时间字符串
+                        let timeStr = '';
+                        if (hours > 0) {
+                          timeStr += `${hours}h`;
+                        }
+                        if (minutes > 0 || hours === 0) {
+                          timeStr += `${minutes}min`;
+                        }
+                        
+                        // 根据正负值确定是提前还是延后
+                        const actionText = data.value > 0 ? '提前' : '延后';
+                        
+                        return `${actionText}${timeStr}`;
+                      })()
                   }
                 </span>
               </>
@@ -119,19 +136,15 @@ export const HabitChart: React.FC<HabitChartProps> = ({ habit, records, timeRang
 
   const yAxisTickFormatter = (value: number) => {
     if (value === 0) return '目标';
-    const hours = Math.floor(Math.abs(value) / 60);
-    const minutes = Math.abs(value) % 60;
-    const prefix = value > 0 ? '早' : '晚';
     
-    let timeString = '';
-    if (hours > 0) {
-      timeString += `${hours}小时`;
-    }
-    if (minutes > 0) {
-      timeString += `${minutes}分钟`;
-    }
+    // 将分钟转换为小时，保留一位小数
+    const hourDecimal = Math.abs(value) / 60;
     
-    return `${prefix} ${timeString}`;
+    // 负数加负号，正数不加符号
+    const prefix = value < 0 ? '-' : '';
+    
+    // 统一格式：数字+h，保留一位小数
+    return `${prefix}${hourDecimal.toFixed(1)}h`;
   };
 
   // 计算数据中的最大最小值
