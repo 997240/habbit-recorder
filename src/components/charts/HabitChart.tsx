@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, ReferenceLine } from 'recharts';
 import { Habit, HabitRecord } from '../../types';
 import { getDaysInRange, formatDisplayDate } from '../../utils/dateUtils';
@@ -13,6 +13,20 @@ interface HabitChartProps {
 
 export const HabitChart: React.FC<HabitChartProps> = ({ habit, records, timeRange, chartType }) => {
   const days = getDaysInRange(timeRange.start, timeRange.end);
+  
+  // 响应式窗口大小检测
+  const [isMobile, setIsMobile] = useState(false);
+  
+  useEffect(() => {
+    const checkIsMobile = () => {
+      setIsMobile(window.innerWidth < 640);
+    };
+    
+    checkIsMobile();
+    window.addEventListener('resize', checkIsMobile);
+    
+    return () => window.removeEventListener('resize', checkIsMobile);
+  }, []);
   
   const chartData = days.map(day => {
     // 使用storage.getRecordValue获取累计值
@@ -269,11 +283,21 @@ export const HabitChart: React.FC<HabitChartProps> = ({ habit, records, timeRang
   // For other types, use the actual target value
   const targetValue = habit.type === 'time-based' ? 0 : (habit.target ? Number(habit.target) : null);
 
+  // 响应式边距设置
+  const getChartMargin = () => {
+    return {
+      top: isMobile ? 10 : 20,
+      right: isMobile ? 10 : 30,
+      left: isMobile ? 5 : 20,
+      bottom: isMobile ? 35 : 60
+    };
+  };
+
   return (
     <div style={{ width: '100%', height: 'clamp(250px, 40vh, 400px)' }} className="min-h-[250px] sm:min-h-[300px]">
       <ResponsiveContainer>
         {chartType === 'bar' ? (
-          <BarChart data={chartData}>
+          <BarChart data={chartData} margin={getChartMargin()}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
             <XAxis 
               dataKey="displayDate" 
@@ -287,6 +311,7 @@ export const HabitChart: React.FC<HabitChartProps> = ({ habit, records, timeRang
               tickFormatter={habit.type === 'time-based' ? yAxisTickFormatter : undefined}
               ticks={habit.type === 'time-based' ? yAxisTicks : undefined}
               domain={habit.type === 'time-based' ? [minHour, maxHour] : undefined}
+              width={isMobile ? 40 : 60}
             />
             <Tooltip content={<CustomTooltip />} />
             <Bar dataKey="value" radius={[4, 4, 0, 0]}>
@@ -312,7 +337,7 @@ export const HabitChart: React.FC<HabitChartProps> = ({ habit, records, timeRang
             )}
           </BarChart>
         ) : (
-          <LineChart data={chartData}>
+          <LineChart data={chartData} margin={getChartMargin()}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
             <XAxis 
               dataKey="displayDate" 
@@ -326,6 +351,7 @@ export const HabitChart: React.FC<HabitChartProps> = ({ habit, records, timeRang
               tickFormatter={habit.type === 'time-based' ? yAxisTickFormatter : undefined}
               ticks={habit.type === 'time-based' ? yAxisTicks : undefined}
               domain={habit.type === 'time-based' ? [minHour, maxHour] : undefined}
+              width={isMobile ? 40 : 60}
             />
             <Tooltip content={<CustomTooltip />} />
             <Line 
