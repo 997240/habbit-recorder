@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Target, BarChart3, Calendar, List, Cog } from 'lucide-react';
 import { useUIStore } from '../../stores/uiStore';
 
@@ -6,6 +6,44 @@ export const Header: React.FC = () => {
   // 使用 selector 精确订阅需要的状态
   const currentPage = useUIStore(state => state.currentPage);
   const navigateTo = useUIStore(state => state.navigateTo);
+  
+  // 滚动方向检测状态
+  const [isVisible, setIsVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+  const scrollThreshold = 20; // 滚动阈值，超过这个值才触发隐藏/显示
+  const headerRef = useRef<HTMLElement>(null);
+  
+  // 处理滚动事件
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      
+      // 计算滚动方向和距离
+      const scrollingDown = currentScrollY > lastScrollY;
+      const scrollDifference = Math.abs(currentScrollY - lastScrollY);
+      
+      // 只有当滚动距离超过阈值时才改变状态
+      if (scrollDifference > scrollThreshold) {
+        // 向下滚动且不在页面顶部时隐藏
+        if (scrollingDown && currentScrollY > 60) {
+          setIsVisible(false);
+        } else {
+          // 向上滚动或在页面顶部时显示
+          setIsVisible(true);
+        }
+        
+        setLastScrollY(currentScrollY);
+      }
+    };
+    
+    // 添加滚动事件监听
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    
+    // 清理函数
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [lastScrollY]);
   const navItems = [
     { id: 'dashboard', label: '仪表板', icon: BarChart3 },
     { id: 'record', label: '记录', icon: Calendar },
@@ -14,7 +52,14 @@ export const Header: React.FC = () => {
   ];
 
   return (
-    <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 sticky top-0 z-50">
+    <header 
+      ref={headerRef}
+      className={`bg-white/80 backdrop-blur-sm border-b border-gray-200/50 sticky z-50 transition-all duration-700 ${
+        isVisible 
+          ? 'top-0 translate-y-0 shadow-sm' 
+          : '-top-full translate-y-0 md:translate-y-0 md:top-0 md:-translate-y-full shadow-lg'
+      }`}
+    >
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -50,23 +95,29 @@ export const Header: React.FC = () => {
           <div className="w-10"></div>
         </div>
 
-        {/* Mobile Navigation */}
-        <div className="md:hidden pb-4">
-          <div className="flex justify-center gap-1">
+        {/* 移除重复的移动端导航栏 */}
+        
+        {/* 固定在底部的移动导航栏，当Header隐藏时显示 */}
+        <div className={`fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-sm border-t border-gray-200 md:hidden z-50 transition-all duration-700 ${isVisible ? 'translate-y-full' : 'translate-y-0'}`}>
+          <div className="flex justify-around items-center py-2">
             {navItems.map((item) => {
               const Icon = item.icon;
               return (
                 <button
                   key={item.id}
-                  onClick={() => navigateTo(item.id as 'dashboard' | 'habits' | 'record' | 'settings')}
-                  className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-all duration-200 ${
+                  onClick={() => {
+                    navigateTo(item.id as 'dashboard' | 'habits' | 'record' | 'settings');
+                    // 点击导航项后确保Header可见
+                    setIsVisible(true);
+                  }}
+                  className={`flex flex-col items-center p-2 ${
                     currentPage === item.id
-                      ? 'bg-blue-100 text-blue-700'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                      ? 'text-blue-600'
+                      : 'text-gray-500'
                   }`}
                 >
-                  <Icon className="w-4 h-4" />
-                  <span className="text-xs">{item.label}</span>
+                  <Icon className="w-5 h-5" />
+                  <span className="text-xs mt-1">{item.label}</span>
                 </button>
               );
             })}

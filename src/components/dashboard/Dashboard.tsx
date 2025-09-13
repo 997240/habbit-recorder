@@ -23,7 +23,7 @@ export const Dashboard: React.FC = () => {
 
 
   return (
-    <div className="max-w-6xl mx-auto p-3 sm:p-6">
+    <div className="max-w-6xl mx-auto p-2 sm:p-6">
       {/* Header */}
       <div className="mb-6 sm:mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">仪表板</h1>
@@ -91,7 +91,7 @@ export const Dashboard: React.FC = () => {
       {activeHabits.length > 0 ? (
         <div className="space-y-4 sm:space-y-8">
           {activeHabits.map((habit) => (
-            <div key={habit.id} className="bg-white rounded-xl border border-gray-200 p-3 sm:p-6">
+            <div key={habit.id} className="bg-white rounded-xl border border-gray-200 p-2 sm:p-6">
               <div className="mb-4 sm:mb-6">
                 <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">{habit.name}</h3>
                 <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-sm text-gray-600">

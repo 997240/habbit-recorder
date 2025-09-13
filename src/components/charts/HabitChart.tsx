@@ -286,15 +286,15 @@ export const HabitChart: React.FC<HabitChartProps> = ({ habit, records, timeRang
   // 响应式边距设置
   const getChartMargin = () => {
     return {
-      top: isMobile ? 10 : 20,
+      top: isMobile ? 0 : 20,
       right: isMobile ? 10 : 30,
-      left: isMobile ? 5 : 20,
-      bottom: isMobile ? 35 : 60
+      left: isMobile ? 0 : 20,
+      bottom: isMobile ? 0 : 60
     };
   };
 
   return (
-    <div style={{ width: '100%', height: 'clamp(250px, 40vh, 400px)' }} className="min-h-[250px] sm:min-h-[300px]">
+    <div style={{ width: '100%', height: 'clamp(200px, 40vh, 400px)' }} className="min-h-[250px] sm:min-h-[200px]">
       <ResponsiveContainer>
         {chartType === 'bar' ? (
           <BarChart data={chartData} margin={getChartMargin()}>
@@ -311,7 +311,7 @@ export const HabitChart: React.FC<HabitChartProps> = ({ habit, records, timeRang
               tickFormatter={habit.type === 'time-based' ? yAxisTickFormatter : undefined}
               ticks={habit.type === 'time-based' ? yAxisTicks : undefined}
               domain={habit.type === 'time-based' ? [minHour, maxHour] : undefined}
-              width={isMobile ? 40 : 60}
+              width={isMobile ? 30 : 60}
             />
             <Tooltip content={<CustomTooltip />} />
             <Bar dataKey="value" radius={[4, 4, 0, 0]}>
