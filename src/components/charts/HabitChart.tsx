@@ -270,7 +270,7 @@ export const HabitChart: React.FC<HabitChartProps> = ({ habit, records, timeRang
   const targetValue = habit.type === 'time-based' ? 0 : (habit.target ? Number(habit.target) : null);
 
   return (
-    <div style={{ width: '100%', height: 300 }}>
+    <div style={{ width: '100%', height: 'clamp(250px, 40vh, 400px)' }} className="min-h-[250px] sm:min-h-[300px]">
       <ResponsiveContainer>
         {chartType === 'bar' ? (
           <BarChart data={chartData}>

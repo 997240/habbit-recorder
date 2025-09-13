@@ -23,16 +23,16 @@ export const Dashboard: React.FC = () => {
 
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
+    <div className="max-w-6xl mx-auto p-3 sm:p-6">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">仪表板</h1>
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">仪表板</h1>
         <p className="text-gray-600">追踪您的进度并分析您的习惯模式。</p>
       </div>
 
 
       {/* Controls */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6 mb-8">
+      <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 mb-6 sm:mb-8">
         <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
           <div>
             <h3 className="font-semibold text-gray-900 mb-2">查看时期</h3>
@@ -89,12 +89,12 @@ export const Dashboard: React.FC = () => {
 
       {/* Charts */}
       {activeHabits.length > 0 ? (
-        <div className="space-y-8">
+        <div className="space-y-4 sm:space-y-8">
           {activeHabits.map((habit) => (
-            <div key={habit.id} className="bg-white rounded-xl border border-gray-200 p-6">
-              <div className="mb-6">
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">{habit.name}</h3>
-                <div className="flex items-center gap-4 text-sm text-gray-600">
+            <div key={habit.id} className="bg-white rounded-xl border border-gray-200 p-3 sm:p-6">
+              <div className="mb-4 sm:mb-6">
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">{habit.name}</h3>
+                <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-sm text-gray-600">
                   <span>类型：{getHabitTypeLabel(habit.type)}</span>
                   {habit.unit && <span>单位：{habit.unit}</span>}
                   {habit.target && <span>目标：{habit.target}{habit.unit ? ` ${habit.unit}` : ''}</span>}

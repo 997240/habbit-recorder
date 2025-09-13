@@ -263,15 +263,15 @@ export const RecordPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-6 relative">
+    <div className="max-w-2xl mx-auto p-3 sm:p-6 relative">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">记录习惯</h1>
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">记录习惯</h1>
         <p className="text-gray-600">追踪您的每日进度，培养持久的习惯。</p>
       </div>
 
       {/* Date Selector */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6 mb-8">
+      <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 mb-6 sm:mb-8">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <Calendar className="w-5 h-5 text-gray-500" />
@@ -315,20 +315,20 @@ export const RecordPage: React.FC = () => {
       
       {/* Today's Record Card */}
       {activeHabits.length > 0 ? (
-        <div className="bg-white rounded-xl border border-gray-200 p-6 mb-8">
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">今日记录</h2>
+        <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 mb-6 sm:mb-8">
+          <div className="mb-4 sm:mb-6">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">今日记录</h2>
             <p className="text-sm text-gray-600">{formatDisplayDate(selectedDate)} 的习惯打卡</p>
           </div>
 
-          <div className="space-y-4 mb-6">
+          <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
             {activeHabits.map((habit) => (
-              <div key={habit.id} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
+              <div key={habit.id} className="flex flex-col sm:flex-row sm:items-center justify-between py-3 border-b border-gray-100 last:border-b-0 gap-3 sm:gap-0">
                 <div className="flex-1 min-w-0">
                   <h3 className="font-medium text-gray-900">{habit.name}</h3>
                   <p className="text-sm text-gray-500">{getHabitSummary(habit)}</p>
                 </div>
-                <div className="ml-4 flex-shrink-0 w-48">
+                <div className="sm:ml-4 flex-shrink-0 w-full sm:w-48">
                   {renderHabitInput(habit)}
                 </div>
               </div>
