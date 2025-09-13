@@ -82,7 +82,7 @@ export const storage = {
   },
 
   // 获取记录的值（适用于所有习惯类型）
-  getRecordValue: (habitId: string, date: string, habitType: 'numeric' | 'duration' | 'time-based' | 'check-in'): number | string | boolean => {
+  getRecordValue: (habitId: string, date: string, habitType: 'numeric' | 'duration' | 'time-based' | 'check-in' | 'time-span'): number | string | boolean | object => {
     const records = storage.getRecords();
     const record = records.find(r => r.habitId === habitId && r.date === date);
     

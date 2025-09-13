@@ -13,6 +13,8 @@ export const RecordPage: React.FC = () => {
   const [recordValues, setRecordValues] = useState<Record<string, any>>({});
   // 为数值型和时长型习惯存储多个输入值
   const [multipleValues, setMultipleValues] = useState<Record<string, Array<{id: string, value: number | string}>>>({});
+  // 为时间段型习惯存储起止时间和扣除时间
+  const [timeSpanValues, setTimeSpanValues] = useState<Record<string, {startTime: string, endTime: string, deduction: number}>>({});
   const [notification, setNotification] = useState<{show: boolean; message: string}>({show: false, message: ''});
   const [showCompleted, setShowCompleted] = useState(true);
   const [showNotCompleted, setShowNotCompleted] = useState(true);
@@ -61,19 +63,28 @@ export const RecordPage: React.FC = () => {
             }
           }
           break;
+        case 'time-span':
+          const timeSpanValue = timeSpanValues[habit.id];
+          if (timeSpanValue && timeSpanValue.startTime && timeSpanValue.endTime) {
+            completed.push(habit);
+          } else {
+            notCompleted.push(habit);
+          }
+          break;
         default:
           notCompleted.push(habit);
       }
     });
 
     return { completedHabits: completed, notCompletedHabits: notCompleted };
-  }, [activeHabits, recordValues, multipleValues, selectedDate]);
+  }, [activeHabits, recordValues, multipleValues, timeSpanValues, selectedDate]);
 
   // Load existing records for the selected date
   React.useEffect(() => {
     const existingRecords = records.filter(record => record.date === selectedDate);
     const values: Record<string, any> = {};
     const multiples: Record<string, Array<{id: string, value: number | string}>> = {};
+    const timeSpans: Record<string, {startTime: string, endTime: string, deduction: number}> = {};
 
     existingRecords.forEach(record => {
       if (record.values && Array.isArray(record.values)) {
@@ -84,6 +95,17 @@ export const RecordPage: React.FC = () => {
             id: v.id,
             value: v.value as number
           }));
+        } else if (habit && habit.type === 'time-span') {
+          // 时间段类型的记录
+          const firstValue = record.values[0];
+          if (firstValue && typeof firstValue.value === 'object') {
+            const timeSpanData = firstValue.value as any;
+            timeSpans[record.habitId] = {
+              startTime: timeSpanData.startTime || '',
+              endTime: timeSpanData.endTime || '',
+              deduction: timeSpanData.deduction || 0.5
+            };
+          }
         } else {
           // 对于时间点型和签到型，取第一个值
           values[record.habitId] = record.values[0]?.value;
@@ -96,6 +118,7 @@ export const RecordPage: React.FC = () => {
 
     setRecordValues(values);
     setMultipleValues(multiples);
+    setTimeSpanValues(timeSpans);
   }, [selectedDate, habits]);
 
   const handleDateChange = (direction: 'prev' | 'next') => {
@@ -135,6 +158,24 @@ export const RecordPage: React.FC = () => {
             habitId: habit.id,
             date: selectedDate,
             values: []
+          });
+        }
+      } else if (habit.type === 'time-span') {
+        // 处理时间段记录
+        const timeSpanValue = timeSpanValues[habit.id];
+        if (timeSpanValue && timeSpanValue.startTime && timeSpanValue.endTime) {
+          recordsToSave.push({
+            habitId: habit.id,
+            date: selectedDate,
+            values: [{
+              id: generateId(),
+              value: {
+                startTime: timeSpanValue.startTime,
+                endTime: timeSpanValue.endTime,
+                deduction: timeSpanValue.deduction
+              },
+              timestamp: new Date().toISOString()
+            }]
           });
         }
       } else {
@@ -306,6 +347,54 @@ export const RecordPage: React.FC = () => {
           </div>
         );
 
+      case 'time-span':
+        const timeSpanValue = timeSpanValues[habit.id] || { startTime: '', endTime: '', deduction: 0.5 };
+        return (
+          <div className="w-full space-y-2">
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="block text-xs text-gray-600 mb-1">开始时间</label>
+                <input
+                  type="time"
+                  value={timeSpanValue.startTime}
+                  onChange={(e) => setTimeSpanValues({
+                    ...timeSpanValues,
+                    [habit.id]: { ...timeSpanValue, startTime: e.target.value }
+                  })}
+                  className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-600 mb-1">结束时间</label>
+                <input
+                  type="time"
+                  value={timeSpanValue.endTime}
+                  onChange={(e) => setTimeSpanValues({
+                    ...timeSpanValues,
+                    [habit.id]: { ...timeSpanValue, endTime: e.target.value }
+                  })}
+                  className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs text-gray-600 mb-1">扣除时间（小时）</label>
+              <input
+                type="number"
+                min="0"
+                step="0.1"
+                value={timeSpanValue.deduction}
+                onChange={(e) => setTimeSpanValues({
+                  ...timeSpanValues,
+                  [habit.id]: { ...timeSpanValue, deduction: parseFloat(e.target.value) || 0 }
+                })}
+                placeholder="0.5"
+                className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+          </div>
+        );
+
       default:
         return null;
     }
@@ -411,6 +500,12 @@ export const RecordPage: React.FC = () => {
                           displayText += ` - ${timeValue}`;
                         }
                         break;
+                      case 'time-span':
+                        const timeSpanValue = timeSpanValues[habit.id];
+                        if (timeSpanValue && timeSpanValue.startTime && timeSpanValue.endTime) {
+                          displayText += ` - ${timeSpanValue.startTime} 至 ${timeSpanValue.endTime}`;
+                        }
+                        break;
                       case 'check-in':
                       default:
                         // 签到型只显示名称
@@ -472,6 +567,12 @@ export const RecordPage: React.FC = () => {
                         const timeValue = recordValues[habit.id];
                         if (timeValue) {
                           displayText += ` - ${timeValue}`;
+                        }
+                        break;
+                      case 'time-span':
+                        const timeSpanValue = timeSpanValues[habit.id];
+                        if (timeSpanValue && timeSpanValue.startTime && timeSpanValue.endTime) {
+                          displayText += ` - ${timeSpanValue.startTime} 至 ${timeSpanValue.endTime}`;
                         }
                         break;
                       case 'check-in':

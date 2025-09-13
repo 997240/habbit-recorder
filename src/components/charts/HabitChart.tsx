@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, ReferenceLine } from 'recharts';
 import { Habit, HabitRecord } from '../../types';
-import { getDaysInRange, formatDisplayDate } from '../../utils/dateUtils';
+import { getDaysInRange, formatDisplayDate, calculateDuration } from '../../utils/dateUtils';
 import { storage } from '../../utils/storage';
 
 interface HabitChartProps {
@@ -34,10 +34,26 @@ export const HabitChart: React.FC<HabitChartProps> = ({ habit, records, timeRang
     const record = records.find(r => r.habitId === habit.id && r.date === day);
     let value = 0;
     let originalValue = null;
+    let startTime = null;
+    let endTime = null;
+    let deduction = null;
     
     if (record) {
       if (habit.type === 'check-in') {
         value = recordValue ? 1 : 0;
+      } else if (habit.type === 'time-span') {
+        // 处理时间段类型
+        if (record.values && record.values.length > 0) {
+          const timeSpanData = record.values[0].value;
+          if (typeof timeSpanData === 'object' && timeSpanData !== null) {
+            const data = timeSpanData as any;
+            startTime = data.startTime;
+            endTime = data.endTime;
+            deduction = data.deduction || 0;
+            value = calculateDuration(startTime, endTime, deduction);
+            originalValue = { startTime, endTime, deduction, duration: value };
+          }
+        }
       } else if (habit.type === 'time-based') {
         // For time-based habits, we'll calculate the difference from target
         if (typeof recordValue === 'string' && habit.target && typeof habit.target === 'string') {
@@ -76,7 +92,10 @@ export const HabitChart: React.FC<HabitChartProps> = ({ habit, records, timeRang
       originalValue,
       displayDate: formatDisplayDate(day).split(',')[0], // Short date
       hasRecord: !!record,
-      note: record?.note
+      note: record?.note,
+      startTime,
+      endTime,
+      deduction
     };
   });
 
@@ -122,6 +141,16 @@ export const HabitChart: React.FC<HabitChartProps> = ({ habit, records, timeRang
                       })()
                   }
                 </span>
+              </>
+            ) : habit.type === 'time-span' ? (
+              <>
+                {data.startTime && data.endTime && (
+                  <>
+                    <span>工作时间: {data.startTime} - {data.endTime}</span>
+                    <span className="block">扣除时间: {data.deduction}小时</span>
+                    <span className="block">净工时: {data.value}小时</span>
+                  </>
+                )}
               </>
             ) : (
               `${data.value}${habit.unit ? ` ${habit.unit}` : ''}`
@@ -305,6 +334,117 @@ export const HabitChart: React.FC<HabitChartProps> = ({ habit, records, timeRang
       bottom: isMobile ? 0 : 60
     };
   };
+
+  // Special handling for time-span habits
+  if (habit.type === 'time-span') {
+    // Convert time strings to minutes for Y-axis
+    const timeSpanChartData = chartData.map(day => {
+      if (day.startTime && day.endTime) {
+        const [startHour, startMinute] = day.startTime.split(':').map(Number);
+        const [endHour, endMinute] = day.endTime.split(':').map(Number);
+        const startTimeMinutes = startHour * 60 + startMinute;
+        const endTimeMinutes = endHour * 60 + endMinute;
+
+        // For stacked bar chart
+        const base = startTimeMinutes;
+        // We only visualize duration for same-day periods for now.
+        const durationMinutes = endTimeMinutes > startTimeMinutes ? endTimeMinutes - startTimeMinutes : null;
+
+        return {
+          ...day,
+          startTimeMinutes: startTimeMinutes,
+          endTimeMinutes: endTimeMinutes,
+          base: base,
+          duration: durationMinutes,
+        };
+      }
+      return { ...day, startTimeMinutes: null, endTimeMinutes: null, base: null, duration: null };
+    });
+
+    const timeFormatter = (minutes: number) => {
+      if (minutes === null || minutes === undefined) return '';
+      const hours = Math.floor(minutes / 60);
+      const mins = minutes % 60;
+      return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+    };
+
+    // Calculate Y-axis range for time-span charts
+    const validTimes = timeSpanChartData.filter(d => d.startTimeMinutes !== null && d.endTimeMinutes !== null);
+    const minTime = validTimes.length > 0 ? Math.min(...validTimes.map(d => Math.min(d.startTimeMinutes!, d.endTimeMinutes!))) : 0;
+    const maxTime = validTimes.length > 0 ? Math.max(...validTimes.map(d => Math.max(d.startTimeMinutes!, d.endTimeMinutes!))) : 1440;
+    
+    const timeYAxisTicks: number[] = [];
+    for (let i = Math.floor(minTime / 60) * 60; i <= Math.ceil(maxTime / 60) * 60; i += 60) { // 每小时一个刻度
+      timeYAxisTicks.push(i);
+    }
+
+    return (
+      <div style={{ width: '100%', height: 'clamp(200px, 40vh, 400px)' }} className="min-h-[250px] sm:min-h-[200px]">
+        <ResponsiveContainer>
+          {chartType === 'bar' ? (
+            <BarChart data={timeSpanChartData} margin={getChartMargin()}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis 
+                dataKey="displayDate" 
+                tick={{ fontSize: 12 }}
+                angle={-45}
+                textAnchor="end"
+                height={60}
+              />
+              <YAxis 
+                tick={{ fontSize: 12 }} 
+                tickFormatter={timeFormatter}
+                ticks={timeYAxisTicks}
+                domain={[minTime - 60, maxTime + 60]}
+                width={isMobile ? 50 : 70}
+              />
+              <Tooltip content={<CustomTooltip />} />
+              {/* Use stacked bars to represent the time range */}
+              <Bar dataKey="base" stackId="a" fill="transparent" />
+              <Bar dataKey="duration" stackId="a" fill="#3B82F6" radius={[4, 4, 0, 0]} name="时长" />
+            </BarChart>
+          ) : (
+            <LineChart data={timeSpanChartData} margin={getChartMargin()}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis 
+                dataKey="displayDate" 
+                tick={{ fontSize: 12 }}
+                angle={-45}
+                textAnchor="end"
+                height={60}
+              />
+              <YAxis 
+                tick={{ fontSize: 12 }} 
+                tickFormatter={timeFormatter}
+                ticks={timeYAxisTicks}
+                domain={[minTime - 60, maxTime + 60]}
+                width={isMobile ? 50 : 70}
+              />
+              <Tooltip content={<CustomTooltip />} />
+              <Line 
+                type="monotone" 
+                dataKey="startTimeMinutes" 
+                stroke="#22C55E" 
+                strokeWidth={2}
+                dot={{ fill: '#22C55E', strokeWidth: 2, r: 4 }}
+                connectNulls={false}
+                name="开始时间"
+              />
+              <Line 
+                type="monotone" 
+                dataKey="endTimeMinutes" 
+                stroke="#EF4444" 
+                strokeWidth={2}
+                dot={{ fill: '#EF4444', strokeWidth: 2, r: 4 }}
+                connectNulls={false}
+                name="结束时间"
+              />
+            </LineChart>
+          )}
+        </ResponsiveContainer>
+      </div>
+    );
+  }
 
   return (
     <div style={{ width: '100%', height: 'clamp(200px, 40vh, 400px)' }} className="min-h-[250px] sm:min-h-[200px]">

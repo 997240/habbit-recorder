@@ -1,4 +1,4 @@
-export type HabitType = 'numeric' | 'duration' | 'time-based' | 'check-in';
+export type HabitType = 'numeric' | 'duration' | 'time-based' | 'check-in' | 'time-span';
 
 export interface Habit {
   id: string;
@@ -8,6 +8,7 @@ export interface Habit {
   target?: number | string;
   isActive: boolean;
   createdAt: string;
+  monthlyStartDay?: number;
 }
 
 export interface HabitRecord {
@@ -17,7 +18,7 @@ export interface HabitRecord {
   // 将单一value改为values数组
   values: Array<{
     id: string;         // 每条记录的唯一ID
-    value: number | string | boolean;
+    value: number | string | boolean | object;
     timestamp: string;  // 记录时间戳
   }>;
   note?: string;

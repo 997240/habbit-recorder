@@ -16,7 +16,8 @@ export const HabitForm: React.FC = () => {
     type: 'numeric' as HabitType,
     unit: '',
     target: '',
-    isActive: true
+    isActive: true,
+    monthlyStartDay: 1
   });
 
   useEffect(() => {
@@ -26,7 +27,8 @@ export const HabitForm: React.FC = () => {
         type: editingHabit.type,
         unit: editingHabit.unit || '',
         target: editingHabit.target?.toString() || '',
-        isActive: editingHabit.isActive
+        isActive: editingHabit.isActive,
+        monthlyStartDay: editingHabit.monthlyStartDay || 1
       });
     } else {
       setFormData({
@@ -34,7 +36,8 @@ export const HabitForm: React.FC = () => {
         type: 'numeric',
         unit: '',
         target: '',
-        isActive: true
+        isActive: true,
+        monthlyStartDay: 1
       });
     }
   }, [editingHabit]);
@@ -43,15 +46,16 @@ export const HabitForm: React.FC = () => {
     e.preventDefault();
     if (!formData.name.trim()) return;
 
-    // 验证目标字段（排除check-in类型）
-    if (formData.type !== 'check-in' && !formData.target.trim()) return;
+    // 验证目标字段（排除check-in和time-span类型）
+    if (formData.type !== 'check-in' && formData.type !== 'time-span' && !formData.target.trim()) return;
 
     const habitData = {
       name: formData.name.trim(),
       type: formData.type,
       unit: formData.unit.trim() || undefined,
       target: formData.target ? (formData.type === 'time-based' ? formData.target : Number(formData.target)) : undefined,
-      isActive: formData.isActive
+      isActive: formData.isActive,
+      monthlyStartDay: formData.type === 'time-span' ? formData.monthlyStartDay : undefined
     };
 
     // 直接调用 store 方法
@@ -79,7 +83,8 @@ export const HabitForm: React.FC = () => {
     { value: 'numeric', label: '数值', description: '追踪数字（如：俯卧撑、深蹲、番茄钟次数）' },
     { value: 'duration', label: '时长', description: '追踪花费的时间（如：冥想、锻炼、瑜伽）' },
     { value: 'time-based', label: '时间点', description: '追踪特定的时间[睡眠记录]（如：睡觉、起床）' },
-    { value: 'check-in', label: '打卡', description: '简单的完成与否追踪（如：是否去健身房、喝牛奶、吃苹果）' }
+    { value: 'check-in', label: '打卡', description: '简单的完成与否追踪（如：是否去健身房、喝牛奶、吃苹果）' },
+    { value: 'time-span', label: '时间段', description: '追踪时间段（如：工作时间、学习时间）' }
   ];
 
   // 如果表单未显示，返回 null
@@ -171,32 +176,53 @@ export const HabitForm: React.FC = () => {
               </div>
             )}
 
-            {/* Target */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                {formData.type === 'check-in' ? '每日目标（打卡类型无需设置）' : '每日目标 *'}
-              </label>
-              {formData.type === 'time-based' ? (
-                <input
-                  type="time"
-                  value={formData.target}
-                  onChange={(e) => setFormData({ ...formData, target: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-                />
-              ) : formData.type !== 'check-in' ? (
+            {/* Monthly Start Day (only for time-span type) */}
+            {formData.type === 'time-span' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  每月起始日 *
+                </label>
                 <input
                   type="number"
-                  min="0"
-                  step={formData.type === 'duration' ? '1' : '0.1'}
-                  value={formData.target}
-                  onChange={(e) => setFormData({ ...formData, target: e.target.value })}
-                  placeholder="输入目标值"
+                  min="1"
+                  max="31"
+                  value={formData.monthlyStartDay}
+                  onChange={(e) => setFormData({ ...formData, monthlyStartDay: parseInt(e.target.value) || 1 })}
+                  placeholder="例如：21（表示从每月21日开始统计）"
                   className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                 />
-              ) : (
-                <p className="text-sm text-gray-500 italic">打卡类习惯不需要设置目标值。</p>
-              )}
-            </div>
+                <p className="text-xs text-gray-500 mt-1">设置每月统计周期的起始日期（1-31）</p>
+              </div>
+            )}
+
+            {/* Target */}
+            {formData.type !== 'time-span' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {formData.type === 'check-in' ? '每日目标（打卡类型无需设置）' : '每日目标 *'}
+                </label>
+                {formData.type === 'time-based' ? (
+                  <input
+                    type="time"
+                    value={formData.target}
+                    onChange={(e) => setFormData({ ...formData, target: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                  />
+                ) : formData.type !== 'check-in' ? (
+                  <input
+                    type="number"
+                    min="0"
+                    step={formData.type === 'duration' ? '1' : '0.1'}
+                    value={formData.target}
+                    onChange={(e) => setFormData({ ...formData, target: e.target.value })}
+                    placeholder="输入目标值"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                  />
+                ) : (
+                  <p className="text-sm text-gray-500 italic">打卡类习惯不需要设置目标值。</p>
+                )}
+              </div>
+            )}
 
             {/* Actions */}
             <div className="flex gap-3 pt-4">

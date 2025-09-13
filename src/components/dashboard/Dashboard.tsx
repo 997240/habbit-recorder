@@ -4,6 +4,7 @@ import { HabitChart } from '../charts/HabitChart';
 import { getTimeRangeDates, formatDisplayDate } from '../../utils/dateUtils';
 import { useHabitStore } from '../../stores/habitStore';
 import { useUIStore } from '../../stores/uiStore';
+import { getWeeklyTotal, getMonthlyTotal } from '../../stores/habitStore';
 
 export const Dashboard: React.FC = () => {
   // 使用 selector 精确订阅需要的状态
@@ -121,12 +122,31 @@ export const Dashboard: React.FC = () => {
         <div className="space-y-4 sm:space-y-8">
           {habitsToDisplay.map((habit) => (
             <div key={habit.id} className="bg-white rounded-xl border border-gray-200 p-2 sm:p-6">
+              {/* Time-span statistics display */}
+              {habit.type === 'time-span' && (
+                <div className="mb-4 p-4 bg-blue-50 rounded-lg">
+                  <div className="grid grid-cols-2 gap-4 text-center">
+                    <div>
+                      <div className="text-2xl font-bold text-blue-600">{getWeeklyTotal(habit.id)}</div>
+                      <div className="text-sm text-gray-600">本周工时（小时）</div>
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold text-green-600">{getMonthlyTotal(habit.id)}</div>
+                      <div className="text-sm text-gray-600">本月工时（小时）</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
               <div className="mb-4 sm:mb-6">
                 <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">{habit.name}</h3>
                 <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-sm text-gray-600">
                   <span>类型：{getHabitTypeLabel(habit.type)}</span>
                   {habit.unit && <span>单位：{habit.unit}</span>}
                   {habit.target && <span>目标：{habit.target}{habit.unit ? ` ${habit.unit}` : ''}</span>}
+                  {habit.type === 'time-span' && habit.monthlyStartDay && (
+                    <span>月度起始日：{habit.monthlyStartDay}号</span>
+                  )}
                 </div>
               </div>
               
@@ -161,6 +181,7 @@ export const Dashboard: React.FC = () => {
       case 'duration': return '计时型';
       case 'time-based': return '时间点型';
       case 'check-in': return '签到型';
+      case 'time-span': return '时间段型';
       default: return type;
     }
   }

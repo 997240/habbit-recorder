@@ -3,6 +3,7 @@ import { devtools } from 'zustand/middleware';
 import { HabitStore } from './types';
 import { Habit, HabitRecord } from '../types';
 import { storage } from '../utils/storage';
+import { calculateDuration, getCustomMonthRange, getTimeRangeDates } from '../utils/dateUtils';
 
 export const useHabitStore = create<HabitStore>()(
   devtools(
@@ -114,3 +115,72 @@ export const useHabitStore = create<HabitStore>()(
     }
   )
 );
+
+// 辅助函数：获取时间段习惯的周度总时长
+export const getWeeklyTotal = (habitId: string): number => {
+  const { habits, records } = useHabitStore.getState();
+  const habit = habits.find(h => h.id === habitId);
+  
+  if (!habit || habit.type !== 'time-span') return 0;
+  
+  const weekRange = getTimeRangeDates('week');
+  const habitRecords = records.filter(r => 
+    r.habitId === habitId && 
+    r.date >= weekRange.start && 
+    r.date <= weekRange.end
+  );
+  
+  let totalHours = 0;
+  habitRecords.forEach(record => {
+    if (record.values && record.values.length > 0) {
+      const value = record.values[0].value;
+      if (typeof value === 'object' && value !== null) {
+        const timeSpanData = value as any;
+        const duration = calculateDuration(
+          timeSpanData.startTime,
+          timeSpanData.endTime,
+          timeSpanData.deduction || 0
+        );
+        totalHours += duration;
+      }
+    }
+  });
+  
+  return Math.round(totalHours * 100) / 100;
+};
+
+// 辅助函数：获取时间段习惯的月度总时长
+export const getMonthlyTotal = (habitId: string): number => {
+  const { habits, records } = useHabitStore.getState();
+  const habit = habits.find(h => h.id === habitId);
+  
+  if (!habit || habit.type !== 'time-span') return 0;
+  
+  const monthRange = habit.monthlyStartDay 
+    ? getCustomMonthRange(habit.monthlyStartDay)
+    : getTimeRangeDates('month');
+    
+  const habitRecords = records.filter(r => 
+    r.habitId === habitId && 
+    r.date >= monthRange.start && 
+    r.date <= monthRange.end
+  );
+  
+  let totalHours = 0;
+  habitRecords.forEach(record => {
+    if (record.values && record.values.length > 0) {
+      const value = record.values[0].value;
+      if (typeof value === 'object' && value !== null) {
+        const timeSpanData = value as any;
+        const duration = calculateDuration(
+          timeSpanData.startTime,
+          timeSpanData.endTime,
+          timeSpanData.deduction || 0
+        );
+        totalHours += duration;
+      }
+    }
+  });
+  
+  return Math.round(totalHours * 100) / 100;
+};
