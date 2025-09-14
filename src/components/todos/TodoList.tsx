@@ -23,7 +23,7 @@ export const TodoList: React.FC<TodoListProps> = ({
 }) => {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
-  const [focusedItemId, setFocusedItemId] = useState<string | null>(null);
+  const [newInputAfterItemId, setNewInputAfterItemId] = useState<string | null>(null);
   const longPressTimer = useRef<NodeJS.Timeout | null>(null);
   const isDragging = useRef(false);
 
@@ -42,7 +42,7 @@ export const TodoList: React.FC<TodoListProps> = ({
     completedAt: null
   };
 
-  // 如果有焦点项，在其后插入新输入框
+  // 在指定项后或末尾插入新输入框
   const todosWithInput = (): (Todo & { isInput?: boolean })[] => {
     const result: (Todo & { isInput?: boolean })[] = [];
     let inputAdded = false;
@@ -50,14 +50,14 @@ export const TodoList: React.FC<TodoListProps> = ({
     displayTodos.forEach((todo, index) => {
       result.push(todo);
       
-      // 在焦点项后添加输入框
-      if (focusedItemId === todo.id) {
+      // 在指定项后添加输入框
+      if (newInputAfterItemId === todo.id) {
         result.push({ ...newTodoItem, id: `new_${todo.id}`, isInput: true });
         inputAdded = true;
       }
     });
 
-    // 如果没有焦点项或列表为空，在末尾添加输入框
+    // 如果没有指定项或列表为空，在末尾添加输入框
     if (!inputAdded) {
       result.push({ ...newTodoItem, isInput: true });
     }
@@ -148,15 +148,26 @@ export const TodoList: React.FC<TodoListProps> = ({
               onDelete={onDelete}
               onAddNew={(text, afterId) => {
                 onAdd(text, afterId === 'new_todo' ? undefined : afterId.replace('new_', ''));
-                // 设置焦点到新创建任务的前一个任务
+                // 在新创建的任务后继续显示输入框
                 const prevTodoId = afterId.replace('new_', '');
                 if (prevTodoId !== 'todo') {
-                  setFocusedItemId(prevTodoId);
+                  // 创建任务后，在该任务后继续显示输入框
+                  setNewInputAfterItemId(prevTodoId);
                 }
               }}
               onFocus={() => {
-                if (!isNewInput) {
-                  setFocusedItemId(todo.id);
+                // 只有新输入框获得焦点时才设置位置
+                if (isNewInput) {
+                  // 当前输入框获得焦点，清除其他位置的输入框
+                  const currentAfterItemId = todo.id.startsWith('new_') 
+                    ? todo.id.replace('new_', '') 
+                    : null;
+                  
+                  if (currentAfterItemId && currentAfterItemId !== 'todo') {
+                    setNewInputAfterItemId(currentAfterItemId);
+                  } else {
+                    setNewInputAfterItemId(null);
+                  }
                 }
               }}
             />

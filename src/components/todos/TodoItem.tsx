@@ -52,6 +52,8 @@ export const TodoItem: React.FC<TodoItemProps> = ({
     
     if (!isNewItem) {
       setIsEditing(false);
+      // 编辑完成时隐藏删除按钮
+      setShowDelete(false);
     }
   };
 
@@ -81,21 +83,34 @@ export const TodoItem: React.FC<TodoItemProps> = ({
   // 处理触摸事件（左滑删除）
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
+    touchEndX.current = e.touches[0].clientX; // 初始化结束位置
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
     touchEndX.current = e.touches[0].clientX;
+    
+    // 如果正在移动，阻止点击事件
+    const currentDistance = Math.abs(touchStartX.current - touchEndX.current);
+    if (currentDistance > 10) {
+      e.preventDefault();
+    }
   };
 
   const handleTouchEnd = () => {
     const swipeDistance = touchStartX.current - touchEndX.current;
-    if (swipeDistance > 50) {
-      // 左滑超过50px显示删除
-      setShowDelete(true);
-    } else if (swipeDistance < -50) {
-      // 右滑隐藏删除
-      setShowDelete(false);
+    const absDistance = Math.abs(swipeDistance);
+    
+    // 只有当滑动距离足够大时才认为是滑动操作，否则认为是点击
+    if (absDistance > 50) {
+      if (swipeDistance > 0) {
+        // 左滑显示删除
+        setShowDelete(true);
+      } else {
+        // 右滑隐藏删除
+        setShowDelete(false);
+      }
     }
+    // 如果滑动距离小于50px，不执行任何操作（保持当前状态）
   };
 
   return (
@@ -103,9 +118,9 @@ export const TodoItem: React.FC<TodoItemProps> = ({
       className={`flex items-center gap-3 px-4 py-3 bg-white border-b border-gray-100 transition-all ${
         showDelete ? 'translate-x-[-80px]' : ''
       }`}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
+      onTouchStart={!isEditing && !isNewItem ? handleTouchStart : undefined}
+      onTouchMove={!isEditing && !isNewItem ? handleTouchMove : undefined}
+      onTouchEnd={!isEditing && !isNewItem ? handleTouchEnd : undefined}
     >
       {/* 复选框 */}
       {!isNewItem ? (
@@ -139,13 +154,22 @@ export const TodoItem: React.FC<TodoItemProps> = ({
               }
             }}
             onKeyDown={handleKeyDown}
-            onFocus={onFocus}
+            onFocus={() => {
+              // 编辑现有任务时不触发onFocus回调，避免创建新输入框
+              if (isNewItem) {
+                onFocus?.();
+              }
+            }}
             placeholder={isNewItem ? "添加新任务..." : ""}
             className="w-full px-2 py-1 text-gray-700 bg-transparent border-b border-gray-300 focus:border-blue-500 focus:outline-none"
           />
         ) : (
           <div
-            onClick={() => setIsEditing(true)}
+            onClick={() => {
+              setIsEditing(true);
+              // 开始编辑时隐藏删除按钮
+              setShowDelete(false);
+            }}
             className={`cursor-pointer ${
               todo.completed
                 ? 'text-gray-400 line-through'
