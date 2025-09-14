@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Check, X } from 'lucide-react';
+import { Check, X, GripVertical } from 'lucide-react';
 import { Todo } from '../../types';
 
 interface TodoItemProps {
@@ -179,6 +179,13 @@ export const TodoItem: React.FC<TodoItemProps> = ({
           </div>
         )}
       </div>
+
+      {/* 拖动图标 */}
+      {!isNewItem && !todo.completed && (
+        <div className="flex-shrink-0 p-1 text-gray-400 cursor-move">
+          <GripVertical className="w-4 h-4" />
+        </div>
+      )}
 
       {/* 删除按钮（桌面端悬停显示） */}
       {!isNewItem && (
