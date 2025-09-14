@@ -83,7 +83,13 @@ export const TodoList: React.FC<TodoListProps> = ({
 
     if (isDragging.current && draggedIndex !== null && dragOverIndex !== null) {
       if (draggedIndex !== dragOverIndex) {
-        onReorder(draggedIndex, dragOverIndex);
+        const draggedTodo = displayTodos[draggedIndex];
+        const targetTodo = displayTodos[dragOverIndex];
+        
+        // 只允许未完成任务之间的重新排序
+        if (!draggedTodo?.completed && !targetTodo?.completed) {
+          onReorder(draggedIndex, dragOverIndex);
+        }
       }
     }
 
@@ -103,18 +109,35 @@ export const TodoList: React.FC<TodoListProps> = ({
 
   const handleDragOver = (e: React.DragEvent, index: number) => {
     e.preventDefault();
+    
+    // 如果目标是已完成任务，不允许放置
     if (displayTodos[index]?.completed) return;
     
+    // 如果正在拖动未完成任务，只允许在未完成任务区域内排序
     if (draggedIndex !== null) {
-      setDragOverIndex(index);
+      const draggedTodo = displayTodos[draggedIndex];
+      const targetTodo = displayTodos[index];
+      
+      // 只有当拖动的是未完成任务且目标也是未完成任务时才允许
+      if (!draggedTodo?.completed && !targetTodo?.completed) {
+        setDragOverIndex(index);
+      }
     }
   };
 
   const handleDrop = (e: React.DragEvent, index: number) => {
     e.preventDefault();
+    
     if (draggedIndex !== null && draggedIndex !== index) {
-      onReorder(draggedIndex, index);
+      const draggedTodo = displayTodos[draggedIndex];
+      const targetTodo = displayTodos[index];
+      
+      // 只允许未完成任务之间的重新排序
+      if (!draggedTodo?.completed && !targetTodo?.completed) {
+        onReorder(draggedIndex, index);
+      }
     }
+    
     setDraggedIndex(null);
     setDragOverIndex(null);
   };
