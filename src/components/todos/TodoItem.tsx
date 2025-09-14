@@ -24,9 +24,11 @@ export const TodoItem: React.FC<TodoItemProps> = ({
   const [isEditing, setIsEditing] = useState(isNewItem);
   const [text, setText] = useState(todo.text);
   const [showDelete, setShowDelete] = useState(false);
+  const [swipeOffset, setSwipeOffset] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const touchStartX = useRef(0);
   const touchEndX = useRef(0);
+  const isSwipping = useRef(false);
 
   useEffect(() => {
     if (isEditing && inputRef.current) {
@@ -52,8 +54,9 @@ export const TodoItem: React.FC<TodoItemProps> = ({
     
     if (!isNewItem) {
       setIsEditing(false);
-      // 编辑完成时隐藏删除按钮
+      // 编辑完成时隐藏删除按钮和重置滑动状态
       setShowDelete(false);
+      setSwipeOffset(0);
     }
   };
 
@@ -83,16 +86,33 @@ export const TodoItem: React.FC<TodoItemProps> = ({
   // 处理触摸事件（左滑删除）
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
-    touchEndX.current = e.touches[0].clientX; // 初始化结束位置
+    touchEndX.current = e.touches[0].clientX;
+    isSwipping.current = false;
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
     touchEndX.current = e.touches[0].clientX;
+    const swipeDistance = touchStartX.current - touchEndX.current;
     
-    // 如果正在移动，阻止点击事件
-    const currentDistance = Math.abs(touchStartX.current - touchEndX.current);
-    if (currentDistance > 10) {
+    // 如果开始滑动，标记为滑动状态
+    if (Math.abs(swipeDistance) > 5) {
+      isSwipping.current = true;
       e.preventDefault();
+    }
+    
+    // 实时更新滑动偏移，但限制滑动范围
+    if (isSwipping.current) {
+      // 左滑最多80px（删除按钮宽度），右滑最多20px
+      const maxLeftSwipe = 80;
+      const maxRightSwipe = 20;
+      
+      if (swipeDistance > 0) {
+        // 左滑
+        setSwipeOffset(-Math.min(swipeDistance, maxLeftSwipe));
+      } else {
+        // 右滑
+        setSwipeOffset(-Math.max(swipeDistance, -maxRightSwipe));
+      }
     }
   };
 
@@ -100,24 +120,37 @@ export const TodoItem: React.FC<TodoItemProps> = ({
     const swipeDistance = touchStartX.current - touchEndX.current;
     const absDistance = Math.abs(swipeDistance);
     
-    // 只有当滑动距离足够大时才认为是滑动操作，否则认为是点击
-    if (absDistance > 50) {
-      if (swipeDistance > 0) {
-        // 左滑显示删除
-        setShowDelete(true);
+    if (isSwipping.current) {
+      // 如果滑动距离超过40px，则显示/隐藏删除按钮
+      if (absDistance > 40) {
+        if (swipeDistance > 0) {
+          // 左滑显示删除，固定在-80px位置
+          setSwipeOffset(-80);
+          setShowDelete(true);
+        } else {
+          // 右滑隐藏删除，回到原位
+          setSwipeOffset(0);
+          setShowDelete(false);
+        }
       } else {
-        // 右滑隐藏删除
-        setShowDelete(false);
+        // 滑动距离不够，回弹到当前状态
+        if (showDelete) {
+          setSwipeOffset(-80);
+        } else {
+          setSwipeOffset(0);
+        }
       }
     }
-    // 如果滑动距离小于50px，不执行任何操作（保持当前状态）
+    
+    isSwipping.current = false;
   };
 
   return (
     <div
-      className={`flex items-center gap-3 px-4 py-3 bg-white border-b border-gray-100 transition-all ${
-        showDelete ? 'translate-x-[-80px]' : ''
-      }`}
+      className="flex items-center gap-3 px-4 py-3 bg-white border-b border-gray-100 transition-transform duration-300 ease-out"
+      style={{
+        transform: `translateX(${swipeOffset}px)`
+      }}
       onTouchStart={!isEditing && !isNewItem ? handleTouchStart : undefined}
       onTouchMove={!isEditing && !isNewItem ? handleTouchMove : undefined}
       onTouchEnd={!isEditing && !isNewItem ? handleTouchEnd : undefined}
@@ -166,8 +199,9 @@ export const TodoItem: React.FC<TodoItemProps> = ({
           <div
             onClick={() => {
               setIsEditing(true);
-              // 开始编辑时隐藏删除按钮
+              // 开始编辑时隐藏删除按钮和重置滑动状态
               setShowDelete(false);
+              setSwipeOffset(0);
             }}
             className={`cursor-pointer ${
               todo.completed
