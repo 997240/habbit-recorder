@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Check, X, GripVertical } from 'lucide-react';
+import { Check, X, GripVertical, Trash2 } from 'lucide-react';
 import { Todo } from '../../types';
 
 interface TodoItemProps {
@@ -25,7 +25,10 @@ export const TodoItem: React.FC<TodoItemProps> = ({
   const [text, setText] = useState(todo.text);
   const [showDelete, setShowDelete] = useState(false);
   const [swipeOffset, setSwipeOffset] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isPressed, setIsPressed] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const touchStartX = useRef(0);
   const touchEndX = useRef(0);
   const isSwipping = useRef(false);
@@ -118,11 +121,12 @@ export const TodoItem: React.FC<TodoItemProps> = ({
 
   const handleTouchEnd = () => {
     const swipeDistance = touchStartX.current - touchEndX.current;
-    const absDistance = Math.abs(swipeDistance);
+    const containerWidth = containerRef.current?.offsetWidth || 0;
+    const swipePercentage = Math.abs(swipeDistance) / containerWidth;
     
     if (isSwipping.current) {
-      // 如果滑动距离超过40px，则显示/隐藏删除按钮
-      if (absDistance > 40) {
+      // 如果滑动距离超过容器宽度的40%，则显示/隐藏删除按钮
+      if (swipePercentage > 0.4) {
         if (swipeDistance > 0) {
           // 左滑显示删除，固定在-80px位置
           setSwipeOffset(-80);
@@ -145,11 +149,25 @@ export const TodoItem: React.FC<TodoItemProps> = ({
     isSwipping.current = false;
   };
 
+  const handleDeleteClick = () => {
+    setIsPressed(true);
+    setIsDeleting(true);
+    
+    // 删除动画后执行实际删除
+    setTimeout(() => {
+      onDelete(todo.id);
+      setShowDelete(false);
+    }, 300);
+  };
+
   return (
     <div
-      className="flex items-center gap-3 px-4 py-3 bg-white border-b border-gray-100 transition-transform duration-300 ease-out"
+      ref={containerRef}
+      className={`flex items-center gap-3 px-4 py-3 bg-white border-b border-gray-100 transition-all duration-300 ease-out ${
+        isDeleting ? 'opacity-0 translate-y-2' : 'opacity-100 translate-y-0'
+      }`}
       style={{
-        transform: `translateX(${swipeOffset}px)`
+        transform: `translateX(${swipeOffset}px) ${isDeleting ? 'translateY(8px)' : ''}`
       }}
       onTouchStart={!isEditing && !isNewItem ? handleTouchStart : undefined}
       onTouchMove={!isEditing && !isNewItem ? handleTouchMove : undefined}
@@ -235,15 +253,25 @@ export const TodoItem: React.FC<TodoItemProps> = ({
 
       {/* 滑动删除按钮（移动端） */}
       {!isNewItem && showDelete && (
-        <div className="absolute right-0 top-0 bottom-0 w-20 bg-red-500 flex items-center justify-center">
+        <div 
+          className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-r from-[#FF6B6B] to-[#FF4757] flex flex-col items-center justify-center transition-all duration-200"
+          style={{
+            boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.1)',
+            transform: isPressed ? 'scale(0.95)' : 'scale(1)',
+            background: isPressed ? 'linear-gradient(to right, #FF5252, #FF3838)' : ''
+          }}
+        >
           <button
-            onClick={() => {
-              onDelete(todo.id);
-              setShowDelete(false);
-            }}
-            className="text-white font-medium"
+            onMouseDown={() => setIsPressed(true)}
+            onMouseUp={() => setIsPressed(false)}
+            onMouseLeave={() => setIsPressed(false)}
+            onTouchStart={() => setIsPressed(true)}
+            onTouchEnd={() => setIsPressed(false)}
+            onClick={handleDeleteClick}
+            className="flex flex-col items-center justify-center w-full h-full"
           >
-            删除
+            <Trash2 className="w-5 h-5 text-white mb-1" />
+            <span className="text-xs text-white font-medium">删除</span>
           </button>
         </div>
       )}
