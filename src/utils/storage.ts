@@ -1,8 +1,9 @@
-import { Habit, HabitRecord } from '../types';
+import { Habit, HabitRecord, Todo } from '../types';
 
 const STORAGE_KEYS = {
   HABITS: 'habit_tracker_habits',
-  RECORDS: 'habit_tracker_records'
+  RECORDS: 'habit_tracker_records',
+  APP_DATA: 'habit_tracker_app_data'  // 新的统一存储键
 };
 
 export const storage = {
@@ -122,5 +123,60 @@ export const storage = {
   clearAll: (): void => {
     localStorage.removeItem(STORAGE_KEYS.HABITS);
     localStorage.removeItem(STORAGE_KEYS.RECORDS);
+    localStorage.removeItem(STORAGE_KEYS.APP_DATA);
   }
+};
+
+// 新的统一数据接口，支持向后兼容
+interface AppData {
+  habits: Habit[];
+  records: HabitRecord[];
+  todos?: Todo[];  // 可选，确保向后兼容
+}
+
+// 加载所有数据（向后兼容）
+export const loadData = (): AppData => {
+  // 首先尝试加载新格式的统一数据
+  const appDataStr = localStorage.getItem(STORAGE_KEYS.APP_DATA);
+  if (appDataStr) {
+    const data = JSON.parse(appDataStr);
+    // 确保todos字段存在
+    if (!data.todos) {
+      data.todos = [];
+    }
+    return data;
+  }
+  
+  // 如果没有新格式数据，尝试从旧格式迁移
+  const habits = storage.getHabits();
+  const records = storage.getRecords();
+  
+  // 构建新格式数据
+  const appData: AppData = {
+    habits,
+    records,
+    todos: []
+  };
+  
+  // 保存为新格式
+  if (habits.length > 0 || records.length > 0) {
+    saveData(appData);
+  }
+  
+  return appData;
+};
+
+// 保存所有数据
+export const saveData = (data: AppData): void => {
+  // 确保todos字段存在
+  if (!data.todos) {
+    data.todos = [];
+  }
+  
+  // 保存到新的统一存储
+  localStorage.setItem(STORAGE_KEYS.APP_DATA, JSON.stringify(data));
+  
+  // 同时更新旧格式存储，确保向后兼容
+  localStorage.setItem(STORAGE_KEYS.HABITS, JSON.stringify(data.habits));
+  localStorage.setItem(STORAGE_KEYS.RECORDS, JSON.stringify(data.records));
 };

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Target, BarChart3, Calendar, List, Cog } from 'lucide-react';
+import { Target, BarChart3, Calendar, List, CheckSquare, Cog } from 'lucide-react';
 import { useUIStore } from '../../stores/uiStore';
 
 export const Header: React.FC = () => {
@@ -48,6 +48,7 @@ export const Header: React.FC = () => {
     { id: 'dashboard', label: '仪表板', icon: BarChart3 },
     { id: 'record', label: '记录', icon: Calendar },
     { id: 'habits', label: '习惯', icon: List },
+    { id: 'todos', label: '待办', icon: CheckSquare },
     { id: 'settings', label: '设置', icon: Cog },
   ];
 
@@ -77,7 +78,7 @@ export const Header: React.FC = () => {
               return (
                 <button
                   key={item.id}
-                  onClick={() => navigateTo(item.id as 'dashboard' | 'habits' | 'record' | 'settings')}
+                  onClick={() => navigateTo(item.id as 'dashboard' | 'habits' | 'record' | 'todos' | 'settings')}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
                     currentPage === item.id
                       ? 'bg-blue-100 text-blue-700 shadow-sm'
@@ -106,7 +107,7 @@ export const Header: React.FC = () => {
                 <button
                   key={item.id}
                   onClick={() => {
-                    navigateTo(item.id as 'dashboard' | 'habits' | 'record' | 'settings');
+                    navigateTo(item.id as 'dashboard' | 'habits' | 'record' | 'todos' | 'settings');
                     // 点击导航项后确保Header可见
                     setIsVisible(true);
                   }}

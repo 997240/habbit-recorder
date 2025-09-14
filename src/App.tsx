@@ -5,6 +5,7 @@ import { HabitList } from './components/habits/HabitList';
 import { HabitForm } from './components/habits/HabitForm';
 import { RecordPage } from './components/record/RecordPage';
 import { SettingsPage } from './components/settings/SettingsPage';
+import { TodoPage } from './components/todos/TodoPage';
 import { useHabitStore } from './stores/habitStore';
 import { useUIStore } from './stores/uiStore';
 
@@ -26,6 +27,8 @@ function App() {
         return <HabitList />;
       case 'record':
         return <RecordPage />;
+      case 'todos':
+        return <TodoPage />;
       case 'settings':
         return <SettingsPage />;
       case 'dashboard':

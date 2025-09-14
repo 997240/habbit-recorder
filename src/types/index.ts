@@ -25,10 +25,20 @@ export interface HabitRecord {
   createdAt: string;
 }
 
+export interface Todo {
+  id: string;
+  text: string;
+  completed: boolean;
+  order: number;
+  createdAt: string;
+  completedAt: string | null;
+}
+
 export interface AppState {
   habits: Habit[];
   records: HabitRecord[];
-  currentPage: 'dashboard' | 'habits' | 'record' | 'settings';
+  todos: Todo[];
+  currentPage: 'dashboard' | 'habits' | 'record' | 'todos' | 'settings';
   selectedDate: string;
   timeRange: 'last7days' | 'week' | 'last30days' | 'month' | 'year' | 'custom';
   customRange: { start: string; end: string };

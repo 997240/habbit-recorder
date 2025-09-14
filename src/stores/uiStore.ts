@@ -4,14 +4,14 @@ import { Habit } from '../types';
 
 interface UIStore {
   // 导航状态
-  currentPage: 'dashboard' | 'habits' | 'record' | 'settings';
+  currentPage: 'dashboard' | 'habits' | 'record' | 'todos' | 'settings';
   
   // 表单状态
   showHabitForm: boolean;
   editingHabit: Habit | undefined;
   
   // 导航相关方法
-  navigateTo: (page: 'dashboard' | 'habits' | 'record' | 'settings') => void;
+  navigateTo: (page: 'dashboard' | 'habits' | 'record' | 'todos' | 'settings') => void;
   
   // 表单相关方法
   openHabitForm: (habit?: Habit) => void;
