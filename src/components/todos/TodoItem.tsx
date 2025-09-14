@@ -149,9 +149,8 @@ export const TodoItem: React.FC<TodoItemProps> = ({
             value={text}
             onChange={(e) => setText(e.target.value)}
             onBlur={() => {
-              if (!isNewItem) {
-                handleSave();
-              }
+              // 失去焦点时自动保存（无论是新任务还是编辑任务）
+              handleSave();
             }}
             onKeyDown={handleKeyDown}
             onFocus={() => {
