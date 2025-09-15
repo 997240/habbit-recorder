@@ -31,7 +31,9 @@ export const TodoItem: React.FC<TodoItemProps> = ({
   const { getItemState, setItemState } = useTodoListContext();
   const itemState = getItemState(todo.id);
   
-  const [isEditing, setIsEditing] = useState(isNewItem);
+  // 从状态机派生编辑状态
+  const isEditing = isNewItem || itemState === 'editing';
+  
   const [text, setText] = useState(todo.text);
   const [showDelete, setShowDelete] = useState(false);
   const [swipeOffset, setSwipeOffset] = useState(0);
@@ -58,17 +60,10 @@ export const TodoItem: React.FC<TodoItemProps> = ({
     if (isEditing && inputRef.current) {
       inputRef.current.focus();
       inputRef.current.select();
-      // 设置状态机为编辑状态
-      if (!isNewItem && itemState === 'idle') {
-        setItemState(todo.id, 'editing');
-      }
       // 初始化时调整高度
       adjustTextareaHeight();
-    } else if (!isEditing && !isNewItem && itemState === 'editing') {
-      // 退出编辑时重置状态机
-      setItemState(todo.id, 'idle');
     }
-  }, [isEditing, isNewItem, itemState, todo.id, setItemState, adjustTextareaHeight]);
+  }, [isEditing, adjustTextareaHeight]);
 
   // 监听文本变化，自动调整高度
   useEffect(() => {
@@ -78,14 +73,15 @@ export const TodoItem: React.FC<TodoItemProps> = ({
   // 处理shouldFocus
   useEffect(() => {
     if (shouldFocus && !isNewItem) {
-      setIsEditing(true);
+      // 设置状态机为编辑状态
+      setItemState(todo.id, 'editing');
       setWasEmptyNewItem(true);
       setTimeout(() => {
         inputRef.current?.focus();
         onFocusHandled?.();
       }, 0);
     }
-  }, [shouldFocus, isNewItem, onFocusHandled]);
+  }, [shouldFocus, isNewItem, todo.id, setItemState, onFocusHandled]);
 
   const handleSave = () => {
     const trimmedText = text.trim();
@@ -99,8 +95,8 @@ export const TodoItem: React.FC<TodoItemProps> = ({
       onUpdate(todo.id, trimmedText);
     } else if (!isNewItem && !trimmedText && wasEmptyNewItem) {
       // 如果是通过回车创建的新item且内容为空，删除它
-      // 在删除前先重置状态
-      setIsEditing(false);
+      // 在删除前先重置状态机
+      setItemState(todo.id, 'idle');
       setWasEmptyNewItem(false);
       onDelete(todo.id);
       return;
@@ -110,9 +106,9 @@ export const TodoItem: React.FC<TodoItemProps> = ({
     }
     
     if (!isNewItem) {
-      setIsEditing(false);
+      // 退出编辑模式 - 重置状态机
+      setItemState(todo.id, 'idle');
       setWasEmptyNewItem(false);
-      // 退出编辑模式
       // 编辑完成时隐藏删除按钮和重置滑动状态
       setShowDelete(false);
       setSwipeOffset(0);
@@ -145,13 +141,19 @@ export const TodoItem: React.FC<TodoItemProps> = ({
           
           // 立即更新当前组件的显示文本为截断后的文本
           setText(beforeText);
+          
+          // 关键：退出编辑模式，重置状态机
+          setItemState(todo.id, 'idle');
         } else {
           handleSave();
         }
       }
     } else if (e.key === 'Escape') {
       setText(isNewItem ? '' : todo.text);
-      setIsEditing(false);
+      // 退出编辑模式 - 重置状态机
+      if (!isNewItem) {
+        setItemState(todo.id, 'idle');
+      }
     }
   };
 
@@ -303,16 +305,13 @@ export const TodoItem: React.FC<TodoItemProps> = ({
             onClick={() => {
               // 只有在idle状态时才能进入编辑
               if (!isNewItem && itemState === 'idle') {
-                setIsEditing(true);
+                // 设置状态机为编辑状态
+                setItemState(todo.id, 'editing');
                 // 开始编辑时隐藏删除按钮和重置滑动状态
                 setShowDelete(false);
                 setSwipeOffset(0);
-              } else if (isNewItem) {
-                // 新建项直接进入编辑
-                setIsEditing(true);
-                setShowDelete(false);
-                setSwipeOffset(0);
               }
+              // 新建项不需要处理，因为它始终是编辑状态
             }}
             className={`cursor-pointer ${
               todo.completed
