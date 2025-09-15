@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Check, X, GripVertical, Trash2 } from 'lucide-react';
 import { Todo } from '../../types';
 
@@ -31,21 +31,38 @@ export const TodoItem: React.FC<TodoItemProps> = ({
   const [swipeOffset, setSwipeOffset] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const touchStartX = useRef(0);
   const touchEndX = useRef(0);
   const isSwipping = useRef(false);
+
+  // 自动调整 textarea 高度的函数
+  const adjustTextareaHeight = useCallback(() => {
+    if (inputRef.current) {
+      // 先重置高度为 auto 以获取准确的 scrollHeight
+      inputRef.current.style.height = 'auto';
+      // 设置高度为内容高度
+      inputRef.current.style.height = `${inputRef.current.scrollHeight}px`;
+    }
+  }, []);
 
   useEffect(() => {
     if (isEditing && inputRef.current) {
       inputRef.current.focus();
       inputRef.current.select();
       setIsAnyItemEditing(true);
+      // 初始化时调整高度
+      adjustTextareaHeight();
     } else if (!isEditing && !isNewItem) {
       setIsAnyItemEditing(false);
     }
-  }, [isEditing, isNewItem, setIsAnyItemEditing]);
+  }, [isEditing, isNewItem, setIsAnyItemEditing, adjustTextareaHeight]);
+
+  // 监听文本变化，自动调整高度
+  useEffect(() => {
+    adjustTextareaHeight();
+  }, [text, adjustTextareaHeight]);
 
   const handleSave = () => {
     const trimmedText = text.trim();
@@ -201,11 +218,13 @@ export const TodoItem: React.FC<TodoItemProps> = ({
       {/* 任务文本 */}
       <div className="flex-1">
         {isEditing || isNewItem ? (
-          <input
+          <textarea
             ref={inputRef}
-            type="text"
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={(e) => {
+              setText(e.target.value);
+              adjustTextareaHeight();
+            }}
             onBlur={() => {
               // 失去焦点时自动保存（无论是新任务还是编辑任务）
               handleSave();
@@ -218,7 +237,8 @@ export const TodoItem: React.FC<TodoItemProps> = ({
               }
             }}
             placeholder={isNewItem ? "添加新任务..." : ""}
-            className="w-full px-2 py-1 text-gray-700 bg-transparent border-b border-gray-300 focus:border-blue-500 focus:outline-none"
+            className="w-full px-2 py-1 text-gray-700 bg-transparent border-b border-gray-300 focus:border-blue-500 focus:outline-none resize-none overflow-hidden"
+            rows={1}
           />
         ) : (
           <div
