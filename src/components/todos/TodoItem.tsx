@@ -5,8 +5,6 @@ import { Todo } from '../../types';
 interface TodoItemProps {
   todo: Todo;
   isNewItem?: boolean;
-  isAnyItemEditing: boolean;
-  setIsAnyItemEditing: (editing: boolean) => void;
   onUpdate: (id: string, text: string) => void;
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
@@ -20,8 +18,6 @@ interface TodoItemProps {
 export const TodoItem: React.FC<TodoItemProps> = ({
   todo,
   isNewItem = false,
-  isAnyItemEditing,
-  setIsAnyItemEditing,
   onUpdate,
   onToggle,
   onDelete,
@@ -58,14 +54,12 @@ export const TodoItem: React.FC<TodoItemProps> = ({
     if (isEditing && inputRef.current) {
       inputRef.current.focus();
       inputRef.current.select();
-      if (!isNewItem) {  // 只有非新建项才设置全局编辑状态
-        setIsAnyItemEditing(true);
-      }
+      // 移除了全局编辑状态的设置
       // 初始化时调整高度
       adjustTextareaHeight();
     }
     // 移除了 else if 分支，避免错误地重置全局编辑状态
-  }, [isEditing, isNewItem, setIsAnyItemEditing, adjustTextareaHeight]);
+  }, [isEditing, adjustTextareaHeight]);
 
   // 监听文本变化，自动调整高度
   useEffect(() => {
@@ -96,10 +90,9 @@ export const TodoItem: React.FC<TodoItemProps> = ({
       onUpdate(todo.id, trimmedText);
     } else if (!isNewItem && !trimmedText && wasEmptyNewItem) {
       // 如果是通过回车创建的新item且内容为空，删除它
-      // 在删除前先重置状态，避免isAnyItemEditing被卡住
+      // 在删除前先重置状态
       setIsEditing(false);
       setWasEmptyNewItem(false);
-      setIsAnyItemEditing(false);  // 直接重置全局编辑状态
       onDelete(todo.id);
       return;
     } else if (!isNewItem) {
@@ -110,8 +103,7 @@ export const TodoItem: React.FC<TodoItemProps> = ({
     if (!isNewItem) {
       setIsEditing(false);
       setWasEmptyNewItem(false);
-      // 退出编辑模式时重置全局编辑状态
-      setIsAnyItemEditing(false);
+      // 退出编辑模式
       // 编辑完成时隐藏删除按钮和重置滑动状态
       setShowDelete(false);
       setSwipeOffset(0);
@@ -287,13 +279,10 @@ export const TodoItem: React.FC<TodoItemProps> = ({
         ) : (
           <div
             onClick={() => {
-              // 只有当没有其他项在编辑时才允许进入编辑状态
-              if (!isAnyItemEditing) {
-                setIsEditing(true);
-                // 开始编辑时隐藏删除按钮和重置滑动状态
-                setShowDelete(false);
-                setSwipeOffset(0);
-              }
+              setIsEditing(true);
+              // 开始编辑时隐藏删除按钮和重置滑动状态
+              setShowDelete(false);
+              setSwipeOffset(0);
             }}
             className={`cursor-pointer ${
               todo.completed

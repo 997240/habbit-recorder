@@ -26,7 +26,6 @@ export const TodoList: React.FC<TodoListProps> = ({
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [newInputAfterItemId, setNewInputAfterItemId] = useState<string | null>(null);
-  const [isAnyItemEditing, setIsAnyItemEditing] = useState(false);
   const [focusNewItemId, setFocusNewItemId] = useState<string | null>(null);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isDragging = useRef(false);
@@ -170,8 +169,6 @@ export const TodoList: React.FC<TodoListProps> = ({
             <TodoItem
               todo={todo}
               isNewItem={isNewInput}
-              isAnyItemEditing={isAnyItemEditing}
-              setIsAnyItemEditing={setIsAnyItemEditing}
               onUpdate={onUpdate}
               onToggle={onToggle}
               onDelete={onDelete}
