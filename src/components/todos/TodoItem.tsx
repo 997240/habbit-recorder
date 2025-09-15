@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Check, X, GripVertical, Trash2 } from 'lucide-react';
 import { Todo } from '../../types';
+import { useTodoListContext } from '../../contexts/TodoListContext';
 
 interface TodoItemProps {
   todo: Todo;
@@ -27,6 +28,9 @@ export const TodoItem: React.FC<TodoItemProps> = ({
   shouldFocus,
   onFocusHandled
 }) => {
+  const { getItemState, setItemState } = useTodoListContext();
+  const itemState = getItemState(todo.id);
+  
   const [isEditing, setIsEditing] = useState(isNewItem);
   const [text, setText] = useState(todo.text);
   const [showDelete, setShowDelete] = useState(false);
@@ -54,12 +58,17 @@ export const TodoItem: React.FC<TodoItemProps> = ({
     if (isEditing && inputRef.current) {
       inputRef.current.focus();
       inputRef.current.select();
-      // 移除了全局编辑状态的设置
+      // 设置状态机为编辑状态
+      if (!isNewItem && itemState === 'idle') {
+        setItemState(todo.id, 'editing');
+      }
       // 初始化时调整高度
       adjustTextareaHeight();
+    } else if (!isEditing && !isNewItem && itemState === 'editing') {
+      // 退出编辑时重置状态机
+      setItemState(todo.id, 'idle');
     }
-    // 移除了 else if 分支，避免错误地重置全局编辑状态
-  }, [isEditing, adjustTextareaHeight]);
+  }, [isEditing, isNewItem, itemState, todo.id, setItemState, adjustTextareaHeight]);
 
   // 监听文本变化，自动调整高度
   useEffect(() => {
@@ -148,33 +157,41 @@ export const TodoItem: React.FC<TodoItemProps> = ({
 
   // 处理触摸事件（左滑删除）
   const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX;
-    touchEndX.current = e.touches[0].clientX;
-    isSwipping.current = false;
+    // 检查是否可以开始滑动
+    if (!isNewItem && itemState === 'idle') {
+      touchStartX.current = e.touches[0].clientX;
+      touchEndX.current = e.touches[0].clientX;
+      isSwipping.current = false;
+    }
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    touchEndX.current = e.touches[0].clientX;
-    const swipeDistance = touchStartX.current - touchEndX.current;
-    
-    // 如果开始滑动，标记为滑动状态
-    if (Math.abs(swipeDistance) > 5) {
-      isSwipping.current = true;
-      e.preventDefault();
-    }
-    
-    // 实时更新滑动偏移，但限制滑动范围
-    if (isSwipping.current) {
-      // 左滑最多80px（删除按钮宽度），右滑最多20px
-      const maxLeftSwipe = 80;
-      const maxRightSwipe = 20;
+    if (!isNewItem && (itemState === 'idle' || itemState === 'swiping')) {
+      touchEndX.current = e.touches[0].clientX;
+      const swipeDistance = touchStartX.current - touchEndX.current;
       
-      if (swipeDistance > 0) {
-        // 左滑
-        setSwipeOffset(-Math.min(swipeDistance, maxLeftSwipe));
-      } else {
-        // 右滑
-        setSwipeOffset(-Math.max(swipeDistance, -maxRightSwipe));
+      // 如果开始滑动，标记为滑动状态
+      if (Math.abs(swipeDistance) > 5) {
+        if (!isSwipping.current) {
+          isSwipping.current = true;
+          setItemState(todo.id, 'swiping');
+        }
+        e.preventDefault();
+      }
+      
+      // 实时更新滑动偏移，但限制滑动范围
+      if (isSwipping.current) {
+        // 左滑最多80px（删除按钮宽度），右滑最多20px
+        const maxLeftSwipe = 80;
+        const maxRightSwipe = 20;
+        
+        if (swipeDistance > 0) {
+          // 左滑
+          setSwipeOffset(-Math.min(swipeDistance, maxLeftSwipe));
+        } else {
+          // 右滑
+          setSwipeOffset(-Math.max(swipeDistance, -maxRightSwipe));
+        }
       }
     }
   };
@@ -203,6 +220,11 @@ export const TodoItem: React.FC<TodoItemProps> = ({
         } else {
           setSwipeOffset(0);
         }
+      }
+      
+      // 重置状态机
+      if (!isNewItem) {
+        setItemState(todo.id, 'idle');
       }
     }
     
@@ -279,10 +301,18 @@ export const TodoItem: React.FC<TodoItemProps> = ({
         ) : (
           <div
             onClick={() => {
-              setIsEditing(true);
-              // 开始编辑时隐藏删除按钮和重置滑动状态
-              setShowDelete(false);
-              setSwipeOffset(0);
+              // 只有在idle状态时才能进入编辑
+              if (!isNewItem && itemState === 'idle') {
+                setIsEditing(true);
+                // 开始编辑时隐藏删除按钮和重置滑动状态
+                setShowDelete(false);
+                setSwipeOffset(0);
+              } else if (isNewItem) {
+                // 新建项直接进入编辑
+                setIsEditing(true);
+                setShowDelete(false);
+                setSwipeOffset(0);
+              }
             }}
             className={`cursor-pointer ${
               todo.completed

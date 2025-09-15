@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { TodoItem } from './TodoItem';
 import { Todo } from '../../types';
+import { TodoListProvider, useTodoListContext } from '../../contexts/TodoListContext';
 
 interface TodoListProps {
   todos: Todo[];
@@ -13,7 +14,7 @@ interface TodoListProps {
   onInsertAfter?: (afterId: string, beforeText: string, afterText: string) => string;
 }
 
-export const TodoList: React.FC<TodoListProps> = ({
+const TodoListContent: React.FC<TodoListProps> = ({
   todos,
   showCompleted,
   onUpdate,
@@ -23,6 +24,7 @@ export const TodoList: React.FC<TodoListProps> = ({
   onReorder,
   onInsertAfter
 }) => {
+  const { getItemState, setItemState, hasAnyItemInState } = useTodoListContext();
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [newInputAfterItemId, setNewInputAfterItemId] = useState<string | null>(null);
@@ -102,11 +104,29 @@ export const TodoList: React.FC<TodoListProps> = ({
   };
 
   const handleDragStart = (e: React.DragEvent, index: number) => {
-    if (displayTodos[index]?.completed) {
+    const todo = displayTodos[index];
+    if (!todo) return;
+    
+    // 检查是否可以拖拽
+    if (todo.completed) {
       e.preventDefault();
       return;
     }
+    
+    // 检查该项是否在编辑状态
+    if (getItemState(todo.id) !== 'idle') {
+      e.preventDefault();
+      return;
+    }
+    
+    // 检查是否有其他项在编辑
+    if (hasAnyItemInState('editing')) {
+      e.preventDefault();
+      return;
+    }
+    
     setDraggedIndex(index);
+    setItemState(todo.id, 'dragging');
     e.dataTransfer.effectAllowed = 'move';
   };
 
@@ -139,6 +159,11 @@ export const TodoList: React.FC<TodoListProps> = ({
       if (!draggedTodo?.completed && !targetTodo?.completed) {
         onReorder(draggedIndex, index);
       }
+      
+      // 重置拖拽状态
+      if (draggedTodo) {
+        setItemState(draggedTodo.id, 'idle');
+      }
     }
     
     setDraggedIndex(null);
@@ -146,15 +171,20 @@ export const TodoList: React.FC<TodoListProps> = ({
   };
 
   return (
-    <div className="flex-1 overflow-y-auto">
-      {todosWithInput().map((todo) => {
+      <div className="flex-1 overflow-y-auto">
+        {todosWithInput().map((todo) => {
         const isNewInput = todo.isInput;
         const actualIndex = isNewInput ? -1 : displayTodos.findIndex(t => t.id === todo.id);
+        
+        // 判断是否可以拖拽
+        const canDrag = !isNewInput && !todo.completed && 
+                       getItemState(todo.id) === 'idle' && 
+                       !hasAnyItemInState('editing');
         
         return (
           <div
             key={todo.id}
-            draggable={!isNewInput && !todo.completed}
+            draggable={canDrag}
             onDragStart={(e) => !isNewInput && handleDragStart(e, actualIndex)}
             onDragOver={(e) => !isNewInput && handleDragOver(e, actualIndex)}
             onDrop={(e) => !isNewInput && handleDrop(e, actualIndex)}
@@ -211,6 +241,15 @@ export const TodoList: React.FC<TodoListProps> = ({
           </div>
         );
       })}
-    </div>
+      </div>
+  );
+};
+
+// 导出的组件包装了Provider
+export const TodoList: React.FC<TodoListProps> = (props) => {
+  return (
+    <TodoListProvider>
+      <TodoListContent {...props} />
+    </TodoListProvider>
   );
 };
