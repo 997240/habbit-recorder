@@ -58,12 +58,14 @@ export const TodoItem: React.FC<TodoItemProps> = ({
     if (isEditing && inputRef.current) {
       inputRef.current.focus();
       inputRef.current.select();
-      setIsAnyItemEditing(true);
+      if (!isNewItem) {  // 只有非新建项才设置全局编辑状态
+        setIsAnyItemEditing(true);
+      }
       // 初始化时调整高度
       adjustTextareaHeight();
     }
     // 移除了 else if 分支，避免错误地重置全局编辑状态
-  }, [isEditing, setIsAnyItemEditing, adjustTextareaHeight]);
+  }, [isEditing, isNewItem, setIsAnyItemEditing, adjustTextareaHeight]);
 
   // 监听文本变化，自动调整高度
   useEffect(() => {
