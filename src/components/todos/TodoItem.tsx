@@ -70,16 +70,6 @@ export const TodoItem: React.FC<TodoItemProps> = ({
     adjustTextareaHeight();
   }, [text, adjustTextareaHeight]);
 
-  // 添加一个新的 useEffect 来处理编辑状态的清理
-  useEffect(() => {
-    // 组件卸载时，如果当前组件正在编辑，则重置全局编辑状态
-    return () => {
-      if (isEditing && !isNewItem) {
-        setIsAnyItemEditing(false);
-      }
-    };
-  }, [isEditing, isNewItem, setIsAnyItemEditing]);
-
   // 处理shouldFocus
   useEffect(() => {
     if (shouldFocus && !isNewItem) {
