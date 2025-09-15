@@ -125,8 +125,8 @@ export const TodoItem: React.FC<TodoItemProps> = ({
     const swipePercentage = Math.abs(swipeDistance) / containerWidth;
     
     if (isSwipping.current) {
-      // 如果滑动距离超过容器宽度的40%，则显示/隐藏删除按钮
-      if (swipePercentage > 0.4) {
+      // 如果滑动距离超过容器宽度的20%，则显示/隐藏删除按钮
+      if (swipePercentage > 0.2) {
         if (swipeDistance > 0) {
           // 左滑显示删除，固定在-80px位置
           setSwipeOffset(-80);
