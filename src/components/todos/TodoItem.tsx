@@ -61,15 +61,24 @@ export const TodoItem: React.FC<TodoItemProps> = ({
       setIsAnyItemEditing(true);
       // 初始化时调整高度
       adjustTextareaHeight();
-    } else if (!isEditing && !isNewItem) {
-      setIsAnyItemEditing(false);
     }
-  }, [isEditing, isNewItem, setIsAnyItemEditing, adjustTextareaHeight]);
+    // 移除了 else if 分支，避免错误地重置全局编辑状态
+  }, [isEditing, setIsAnyItemEditing, adjustTextareaHeight]);
 
   // 监听文本变化，自动调整高度
   useEffect(() => {
     adjustTextareaHeight();
   }, [text, adjustTextareaHeight]);
+
+  // 添加一个新的 useEffect 来处理编辑状态的清理
+  useEffect(() => {
+    // 组件卸载时，如果当前组件正在编辑，则重置全局编辑状态
+    return () => {
+      if (isEditing && !isNewItem) {
+        setIsAnyItemEditing(false);
+      }
+    };
+  }, [isEditing, isNewItem, setIsAnyItemEditing]);
 
   // 处理shouldFocus
   useEffect(() => {
@@ -109,6 +118,8 @@ export const TodoItem: React.FC<TodoItemProps> = ({
     if (!isNewItem) {
       setIsEditing(false);
       setWasEmptyNewItem(false);
+      // 退出编辑模式时重置全局编辑状态
+      setIsAnyItemEditing(false);
       // 编辑完成时隐藏删除按钮和重置滑动状态
       setShowDelete(false);
       setSwipeOffset(0);
