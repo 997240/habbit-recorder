@@ -1,0 +1,548 @@
+{
+  "habits": [
+    {
+      "id": "1757584063406pseysatqh",
+      "createdAt": "2025-09-11T09:47:43.406Z",
+      "name": "喝牛奶",
+      "type": "check-in",
+      "isActive": true
+    },
+    {
+      "id": "1757584073252swyuqjfok",
+      "createdAt": "2025-09-11T09:47:53.252Z",
+      "name": "健身房",
+      "type": "check-in",
+      "isActive": true
+    },
+    {
+      "id": "17575841541738p9gtwax8",
+      "createdAt": "2025-09-11T09:49:14.173Z",
+      "name": "早睡",
+      "type": "time-based",
+      "target": "23:00",
+      "isActive": true
+    },
+    {
+      "id": "1757584739919ohdmkaw41",
+      "createdAt": "2025-09-11T09:58:59.919Z",
+      "name": "路上听书",
+      "type": "check-in",
+      "isActive": true
+    },
+    {
+      "id": "1757588690326b5z4brdwy",
+      "createdAt": "2025-09-11T11:04:50.327Z",
+      "name": "深蹲",
+      "type": "numeric",
+      "unit": "次",
+      "target": 100,
+      "isActive": true
+    },
+    {
+      "id": "1757588734645ku6nknpxm",
+      "createdAt": "2025-09-11T11:05:34.645Z",
+      "name": "番茄钟",
+      "type": "numeric",
+      "unit": "次",
+      "target": 12,
+      "isActive": true
+    },
+    {
+      "id": "1757652040328naerc08dv",
+      "createdAt": "2025-09-12T04:40:40.328Z",
+      "name": "提肛",
+      "type": "check-in",
+      "unit": "次",
+      "target": 300,
+      "isActive": true
+    },
+    {
+      "id": "1757672152553mbnk6idlj",
+      "createdAt": "2025-09-12T10:15:52.553Z",
+      "name": "吃苹果",
+      "type": "check-in",
+      "isActive": true
+    },
+    {
+      "id": "1757901192101gmyx0bejw",
+      "createdAt": "2025-09-15T01:53:12.101Z",
+      "name": "早上跑步",
+      "type": "check-in",
+      "isActive": true
+    }
+  ],
+  "records": [
+    {
+      "id": "1757584080789pibvhcuvg",
+      "createdAt": "2025-09-11T09:48:00.789Z",
+      "habitId": "1757584063406pseysatqh",
+      "date": "2025-09-11",
+      "values": [
+        {
+          "id": "1757753904787gpbs1ynig",
+          "value": true,
+          "timestamp": "2025-09-13T08:58:24.787Z"
+        }
+      ]
+    },
+    {
+      "id": "1757584089434t3r8rmqqq",
+      "createdAt": "2025-09-11T09:48:09.434Z",
+      "habitId": "1757584073252swyuqjfok",
+      "date": "2025-09-09",
+      "values": [
+        {
+          "id": "1757584089434bogt1rox8",
+          "value": true,
+          "timestamp": "2025-09-11T09:48:09.434Z"
+        }
+      ]
+    },
+    {
+      "id": "1757584173361ntgpbf0ax",
+      "createdAt": "2025-09-11T09:49:33.361Z",
+      "habitId": "17575841541738p9gtwax8",
+      "date": "2025-09-10",
+      "values": [
+        {
+          "id": "1757764621462fy534rv3n",
+          "value": "01:20",
+          "timestamp": "2025-09-13T11:57:01.462Z"
+        }
+      ]
+    },
+    {
+      "id": "1757584746630tjs418y0c",
+      "createdAt": "2025-09-11T09:59:06.630Z",
+      "habitId": "1757584739919ohdmkaw41",
+      "date": "2025-09-11",
+      "values": [
+        {
+          "id": "17577539047871kwd1qjjq",
+          "value": true,
+          "timestamp": "2025-09-13T08:58:24.787Z"
+        }
+      ]
+    },
+    {
+      "id": "1757599502693krfw0061l",
+      "createdAt": "2025-09-11T14:05:02.693Z",
+      "habitId": "1757588690326b5z4brdwy",
+      "date": "2025-09-11",
+      "values": [
+        {
+          "id": "1757599498631837xnuege",
+          "value": 20,
+          "timestamp": "2025-09-13T08:58:24.787Z"
+        }
+      ]
+    },
+    {
+      "id": "1757604815554zfdzratuw",
+      "createdAt": "2025-09-11T15:33:35.554Z",
+      "habitId": "1757588734645ku6nknpxm",
+      "date": "2025-09-11",
+      "values": [
+        {
+          "id": "1757604811710zog6zm81q",
+          "value": 10,
+          "timestamp": "2025-09-13T08:58:24.787Z"
+        }
+      ]
+    },
+    {
+      "id": "1757639274565lviw3m278",
+      "createdAt": "2025-09-12T01:07:54.565Z",
+      "habitId": "17575841541738p9gtwax8",
+      "date": "2025-09-11",
+      "values": [
+        {
+          "id": "17577539047874cdw9sdq6",
+          "value": "01:50",
+          "timestamp": "2025-09-13T08:58:24.787Z"
+        }
+      ]
+    },
+    {
+      "id": "1757639304604k6fj6y5mp",
+      "createdAt": "2025-09-12T01:08:24.604Z",
+      "habitId": "1757588690326b5z4brdwy",
+      "date": "2025-09-12",
+      "values": [
+        {
+          "id": "1757639300420nnrb52qvc",
+          "value": 20,
+          "timestamp": "2025-09-13T08:58:30.417Z"
+        },
+        {
+          "id": "1757652053595q7k23b1q8",
+          "value": 10,
+          "timestamp": "2025-09-13T08:58:30.417Z"
+        },
+        {
+          "id": "1757661017356l0xlbbitz",
+          "value": 20,
+          "timestamp": "2025-09-13T08:58:30.417Z"
+        },
+        {
+          "id": "1757668118606haj3hzfks",
+          "value": 30,
+          "timestamp": "2025-09-13T08:58:30.417Z"
+        }
+      ]
+    },
+    {
+      "id": "1757642535271uvm1ni14t",
+      "createdAt": "2025-09-12T02:02:15.271Z",
+      "habitId": "1757584063406pseysatqh",
+      "date": "2025-09-12",
+      "values": [
+        {
+          "id": "1757753910417da801kivi",
+          "value": true,
+          "timestamp": "2025-09-13T08:58:30.417Z"
+        }
+      ]
+    },
+    {
+      "id": "1757642535278r3mmmsrli",
+      "createdAt": "2025-09-12T02:02:15.278Z",
+      "habitId": "1757584739919ohdmkaw41",
+      "date": "2025-09-12",
+      "values": [
+        {
+          "id": "1757753910417k01o5bwsh",
+          "value": true,
+          "timestamp": "2025-09-13T08:58:30.417Z"
+        }
+      ]
+    },
+    {
+      "id": "1757642572217cv6zfgu1p",
+      "createdAt": "2025-09-12T02:02:52.217Z",
+      "habitId": "1757588690326b5z4brdwy",
+      "date": "2025-09-10",
+      "values": [
+        {
+          "id": "1757642565380u1g0qnjvm",
+          "value": 110,
+          "timestamp": "2025-09-13T11:57:01.463Z"
+        }
+      ]
+    },
+    {
+      "id": "1757652057975lzub1oe8g",
+      "createdAt": "2025-09-12T04:40:57.975Z",
+      "habitId": "1757652040328naerc08dv",
+      "date": "2025-09-12",
+      "values": [
+        {
+          "id": "1757753910417kazexw9er",
+          "value": true,
+          "timestamp": "2025-09-13T08:58:30.417Z"
+        }
+      ]
+    },
+    {
+      "id": "1757672016560xnw0fxzj1",
+      "createdAt": "2025-09-12T10:13:36.560Z",
+      "habitId": "1757584073252swyuqjfok",
+      "date": "2025-09-12",
+      "values": [
+        {
+          "id": "1757753910417j5aghu8lq",
+          "value": true,
+          "timestamp": "2025-09-13T08:58:30.417Z"
+        }
+      ]
+    },
+    {
+      "id": "17576742055826sin98f29",
+      "createdAt": "2025-09-12T10:50:05.582Z",
+      "habitId": "1757672152553mbnk6idlj",
+      "date": "2025-09-12",
+      "values": [
+        {
+          "id": "1757753910417ykq81edf9",
+          "value": true,
+          "timestamp": "2025-09-13T08:58:30.417Z"
+        }
+      ]
+    },
+    {
+      "id": "1757685372531mwj7bktzn",
+      "createdAt": "2025-09-12T13:56:12.531Z",
+      "habitId": "1757588734645ku6nknpxm",
+      "date": "2025-09-12",
+      "values": [
+        {
+          "id": "1757685367636el4qiej25",
+          "value": 8,
+          "timestamp": "2025-09-13T08:58:30.417Z"
+        }
+      ]
+    },
+    {
+      "id": "1757721788068ze525vw8t",
+      "createdAt": "2025-09-13T00:03:08.068Z",
+      "habitId": "17575841541738p9gtwax8",
+      "date": "2025-09-12",
+      "values": [
+        {
+          "id": "175775391041765rdcnhyo",
+          "value": "01:00",
+          "timestamp": "2025-09-13T08:58:30.417Z"
+        }
+      ]
+    },
+    {
+      "id": "1757723937640roj9qqqvi",
+      "createdAt": "2025-09-13T00:38:57.640Z",
+      "habitId": "1757588690326b5z4brdwy",
+      "date": "2025-09-13",
+      "values": [
+        {
+          "id": "1757723933488cpwm3lps3",
+          "value": 25,
+          "timestamp": "2025-09-14T02:09:32.341Z"
+        },
+        {
+          "id": "17577319906375s4gd3mf9",
+          "value": 20,
+          "timestamp": "2025-09-14T02:09:32.341Z"
+        },
+        {
+          "id": "1757764563419hqqrrxpae",
+          "value": 25,
+          "timestamp": "2025-09-14T02:09:32.341Z"
+        }
+      ]
+    },
+    {
+      "id": "1757753904787e7olzvq45",
+      "createdAt": "2025-09-13T08:58:24.787Z",
+      "habitId": "1757652040328naerc08dv",
+      "date": "2025-09-11",
+      "values": [
+        {
+          "id": "175775390478763x0b2tvw",
+          "value": true,
+          "timestamp": "2025-09-13T08:58:24.787Z"
+        }
+      ]
+    },
+    {
+      "id": "1757753934367hh3kyslb7",
+      "createdAt": "2025-09-13T08:58:54.367Z",
+      "habitId": "1757652040328naerc08dv",
+      "date": "2025-09-13",
+      "values": [
+        {
+          "id": "1757815772341rl2mfnkr8",
+          "value": true,
+          "timestamp": "2025-09-14T02:09:32.341Z"
+        }
+      ]
+    },
+    {
+      "id": "1757759929426u4k6odxoa",
+      "createdAt": "2025-09-13T10:38:49.426Z",
+      "habitId": "1757759701136w75591agn",
+      "date": "2025-09-13",
+      "values": [
+        {
+          "id": "1757759929426jga5qy71j",
+          "value": {
+            "startTime": "08:00",
+            "endTime": "19:00",
+            "deduction": 0.5
+          },
+          "timestamp": "2025-09-13T10:38:49.426Z"
+        }
+      ]
+    },
+    {
+      "id": "1757759981549ppeom9jez",
+      "createdAt": "2025-09-13T10:39:41.549Z",
+      "habitId": "1757759701136w75591agn",
+      "date": "2025-09-06",
+      "values": [
+        {
+          "id": "1757759981549zubq8dr8o",
+          "value": {
+            "startTime": "08:00",
+            "endTime": "22:00",
+            "deduction": 0.5
+          },
+          "timestamp": "2025-09-13T10:39:41.549Z"
+        }
+      ]
+    },
+    {
+      "id": "1757764417660rme6zmrg6",
+      "createdAt": "2025-09-13T11:53:37.660Z",
+      "habitId": "1757672152553mbnk6idlj",
+      "date": "2025-09-13",
+      "values": [
+        {
+          "id": "1757815772341cb2fpiisk",
+          "value": true,
+          "timestamp": "2025-09-14T02:09:32.341Z"
+        }
+      ]
+    },
+    {
+      "id": "1757764678807zxw7t7hw4",
+      "createdAt": "2025-09-13T11:57:58.807Z",
+      "habitId": "1757588734645ku6nknpxm",
+      "date": "2025-09-13",
+      "values": [
+        {
+          "id": "1757764673947wa479k4xs",
+          "value": 16,
+          "timestamp": "2025-09-14T02:09:32.341Z"
+        }
+      ]
+    },
+    {
+      "id": "1757815772341na97y0wru",
+      "createdAt": "2025-09-14T02:09:32.341Z",
+      "habitId": "17575841541738p9gtwax8",
+      "date": "2025-09-13",
+      "values": [
+        {
+          "id": "1757815772340r8qzko7so",
+          "value": "00:24",
+          "timestamp": "2025-09-14T02:09:32.340Z"
+        }
+      ]
+    },
+    {
+      "id": "1757819197253hs6k68sjg",
+      "createdAt": "2025-09-14T03:06:37.253Z",
+      "habitId": "1757588690326b5z4brdwy",
+      "date": "2025-09-14",
+      "values": [
+        {
+          "id": "1757819192592url5f9k14",
+          "value": 25,
+          "timestamp": "2025-09-15T01:54:38.378Z"
+        },
+        {
+          "id": "1757850486828xe7j8w1tn",
+          "value": 25,
+          "timestamp": "2025-09-15T01:54:38.378Z"
+        },
+        {
+          "id": "1757853187079b70ewfjiq",
+          "value": 25,
+          "timestamp": "2025-09-15T01:54:38.378Z"
+        }
+      ]
+    },
+    {
+      "id": "1757819202754g1juus34e",
+      "createdAt": "2025-09-14T03:06:42.754Z",
+      "habitId": "1757652040328naerc08dv",
+      "date": "2025-09-14",
+      "values": [
+        {
+          "id": "1757901278378c1y9tbcg7",
+          "value": true,
+          "timestamp": "2025-09-15T01:54:38.378Z"
+        }
+      ]
+    },
+    {
+      "id": "1757845163589hukv4j8p6",
+      "createdAt": "2025-09-14T10:19:23.589Z",
+      "habitId": "1757584739919ohdmkaw41",
+      "date": "2025-09-14",
+      "values": [
+        {
+          "id": "17579012783782338y5gqk",
+          "value": true,
+          "timestamp": "2025-09-15T01:54:38.378Z"
+        }
+      ]
+    },
+    {
+      "id": "1757850795157h8y31d7x6",
+      "createdAt": "2025-09-14T11:53:15.157Z",
+      "habitId": "1757672152553mbnk6idlj",
+      "date": "2025-09-14",
+      "values": [
+        {
+          "id": "175790127837891r0zakyn",
+          "value": true,
+          "timestamp": "2025-09-15T01:54:38.378Z"
+        }
+      ]
+    },
+    {
+      "id": "17579012073342ape6nrbb",
+      "createdAt": "2025-09-15T01:53:27.334Z",
+      "habitId": "1757584739919ohdmkaw41",
+      "date": "2025-09-15",
+      "values": [
+        {
+          "id": "1757901207334gft90ylcf",
+          "value": true,
+          "timestamp": "2025-09-15T01:53:27.334Z"
+        }
+      ]
+    },
+    {
+      "id": "1757901207334qu945du2c",
+      "createdAt": "2025-09-15T01:53:27.334Z",
+      "habitId": "1757901192101gmyx0bejw",
+      "date": "2025-09-15",
+      "values": [
+        {
+          "id": "17579012073342fmf3grzw",
+          "value": true,
+          "timestamp": "2025-09-15T01:53:27.334Z"
+        }
+      ]
+    },
+    {
+      "id": "1757901251803hn9joxda8",
+      "createdAt": "2025-09-15T01:54:11.803Z",
+      "habitId": "1757584063406pseysatqh",
+      "date": "2025-09-14",
+      "values": [
+        {
+          "id": "1757901278378rcp8sqdf7",
+          "value": true,
+          "timestamp": "2025-09-15T01:54:38.378Z"
+        }
+      ]
+    },
+    {
+      "id": "1757901251803own6t4fj6",
+      "createdAt": "2025-09-15T01:54:11.803Z",
+      "habitId": "17575841541738p9gtwax8",
+      "date": "2025-09-14",
+      "values": [
+        {
+          "id": "175790127837851bjsdums",
+          "value": "01:30",
+          "timestamp": "2025-09-15T01:54:38.378Z"
+        }
+      ]
+    },
+    {
+      "id": "1757901278378d0zuegef7",
+      "createdAt": "2025-09-15T01:54:38.378Z",
+      "habitId": "1757588734645ku6nknpxm",
+      "date": "2025-09-14",
+      "values": [
+        {
+          "id": "1757901274525cscomli33",
+          "value": 5,
+          "timestamp": "2025-09-15T01:54:38.378Z"
+        }
+      ]
+    }
+  ]
+}

@@ -58,21 +58,19 @@ export const useHabitStore = create<HabitStore>()(
     // 保存到 localStorage
     storage.addRecord(newRecord);
     
-    // 更新状态 - 处理已存在的记录
+    // 更新状态 - 使用复合键处理已存在的记录
     set((state) => {
-      const existingIndex = state.records.findIndex(
-        r => r.habitId === newRecord.habitId && r.date === newRecord.date
-      );
+      // 创建复合键
+      const newKey = `${newRecord.habitId}_${newRecord.date}`;
       
-      if (existingIndex !== -1) {
-        // 更新已存在的记录
-        const updatedRecords = [...state.records];
-        updatedRecords[existingIndex] = newRecord;
-        return { records: updatedRecords };
-      } else {
-        // 添加新记录
-        return { records: [...state.records, newRecord] };
-      }
+      // 过滤掉相同复合键的旧记录
+      const filteredRecords = state.records.filter(r => {
+        const key = `${r.habitId}_${r.date}`;
+        return key !== newKey;
+      });
+      
+      // 添加新记录
+      return { records: [...filteredRecords, newRecord] };
     });
   },
   
@@ -80,25 +78,25 @@ export const useHabitStore = create<HabitStore>()(
     // 批量保存到 localStorage
     newRecords.forEach(record => storage.addRecord(record));
     
-    // 批量更新状态
+    // 批量更新状态 - 使用复合键匹配而不是ID匹配
     set((state) => {
-      const updatedRecordIds: string[] = [];
+      // 创建复合键集合，用于识别需要更新的记录
+      const updatedKeys = new Set<string>();
       const recordsToAdd: HabitRecord[] = [];
       
-      // 分类处理：更新的和新增的
+      // 收集所有新记录的复合键
       newRecords.forEach(newRecord => {
-        const existingRecord = state.records.find(
-          r => r.habitId === newRecord.habitId && r.date === newRecord.date
-        );
-        
-        if (existingRecord) {
-          updatedRecordIds.push(existingRecord.id);
-        }
+        const key = `${newRecord.habitId}_${newRecord.date}`;
+        updatedKeys.add(key);
         recordsToAdd.push(newRecord);
       });
       
-      // 过滤掉需要更新的记录，然后添加所有新记录
-      const filteredRecords = state.records.filter(r => !updatedRecordIds.includes(r.id));
+      // 过滤掉需要更新的记录（基于复合键），然后添加所有新记录
+      const filteredRecords = state.records.filter(r => {
+        const key = `${r.habitId}_${r.date}`;
+        return !updatedKeys.has(key);
+      });
+      
       return { records: [...filteredRecords, ...recordsToAdd] };
     });
   },
@@ -106,7 +104,27 @@ export const useHabitStore = create<HabitStore>()(
   // 初始化数据
   loadInitialData: () => {
     const habits = storage.getHabits();
-    const records = storage.getRecords();
+    let records = storage.getRecords();
+    
+    // 数据完整性验证：移除重复记录
+    const recordMap = new Map<string, HabitRecord>();
+    records.forEach(record => {
+      const key = `${record.habitId}_${record.date}`;
+      // 如果已存在相同的复合键，保留最新的记录
+      if (!recordMap.has(key) || 
+          (recordMap.get(key)!.createdAt < record.createdAt)) {
+        recordMap.set(key, record);
+      }
+    });
+    
+    // 如果发现并清理了重复记录，更新存储
+    if (recordMap.size < records.length) {
+      console.log(`清理了 ${records.length - recordMap.size} 条重复记录`);
+      records = Array.from(recordMap.values());
+      // 更新存储中的记录
+      storage.setRecords(records);
+    }
+    
     set({ habits, records });
   }
 }),
@@ -184,3 +202,4 @@ export const getMonthlyTotal = (habitId: string): number => {
   
   return Math.round(totalHours * 100) / 100;
 };
+

@@ -14,6 +14,13 @@ export const storage = {
   },
 
   getHabits: (): Habit[] => {
+    // 优先从新格式读取，确保数据一致性
+    const appData = loadData();
+    if (appData.habits && appData.habits.length > 0) {
+      return appData.habits;
+    }
+    
+    // 降级到旧格式
     const habitsData = localStorage.getItem(STORAGE_KEYS.HABITS);
     return habitsData ? JSON.parse(habitsData) : [];
   },
@@ -44,10 +51,23 @@ export const storage = {
 
   // Records operations
   setRecords: (records: HabitRecord[]): void => {
+    // 双写策略：同时更新旧格式和新格式
     localStorage.setItem(STORAGE_KEYS.RECORDS, JSON.stringify(records));
+    
+    // 同时更新新格式存储
+    const appData = loadData();
+    appData.records = records;
+    saveData(appData);
   },
 
   getRecords: (): HabitRecord[] => {
+    // 优先从新格式读取，确保数据一致性
+    const appData = loadData();
+    if (appData.records && appData.records.length > 0) {
+      return appData.records;
+    }
+    
+    // 降级到旧格式
     const recordsData = localStorage.getItem(STORAGE_KEYS.RECORDS);
     return recordsData ? JSON.parse(recordsData) : [];
   },
@@ -67,7 +87,13 @@ export const storage = {
       allRecords.push(record);
     }
     
+    // 双写策略：同时更新旧格式和新格式
     localStorage.setItem(STORAGE_KEYS.RECORDS, JSON.stringify(allRecords));
+    
+    // 同时更新新格式存储
+    const appData = loadData();
+    appData.records = allRecords;
+    saveData(appData);
   },
 
   // 获取累计值的辅助函数
@@ -118,6 +144,12 @@ export const storage = {
     const recordsData = localStorage.getItem(STORAGE_KEYS.RECORDS);
     return recordsData ? JSON.parse(recordsData) : [];
   },
+  
+  // Get all todos (for export/import)
+  getAllTodos: (): Todo[] => {
+    const appData = loadData();
+    return appData.todos || [];
+  },
 
   // Clear all data
   clearAll: (): void => {
@@ -134,36 +166,54 @@ interface AppData {
   todos?: Todo[];  // 可选，确保向后兼容
 }
 
-// 加载所有数据（向后兼容）
+// 加载所有数据（智能选择数据源）
 export const loadData = (): AppData => {
   // 首先尝试加载新格式的统一数据
   const appDataStr = localStorage.getItem(STORAGE_KEYS.APP_DATA);
+  const oldRecordsStr = localStorage.getItem(STORAGE_KEYS.RECORDS);
+  const oldHabitsStr = localStorage.getItem(STORAGE_KEYS.HABITS);
+  
+  let appData: AppData | null = null;
+  let oldData: AppData | null = null;
+  
+  // 解析新格式数据
   if (appDataStr) {
-    const data = JSON.parse(appDataStr);
-    // 确保todos字段存在
-    if (!data.todos) {
-      data.todos = [];
+    try {
+      appData = JSON.parse(appDataStr);
+      if (!appData!.todos) {
+        appData!.todos = [];
+      }
+    } catch (e) {
+      console.error('解析新格式数据失败', e);
     }
-    return data;
   }
   
-  // 如果没有新格式数据，尝试从旧格式迁移
-  const habits = storage.getHabits();
-  const records = storage.getRecords();
-  
-  // 构建新格式数据
-  const appData: AppData = {
-    habits,
-    records,
-    todos: []
-  };
-  
-  // 保存为新格式
-  if (habits.length > 0 || records.length > 0) {
-    saveData(appData);
+  // 解析旧格式数据
+  if (oldHabitsStr || oldRecordsStr) {
+    oldData = {
+      habits: oldHabitsStr ? JSON.parse(oldHabitsStr) : [],
+      records: oldRecordsStr ? JSON.parse(oldRecordsStr) : [],
+      todos: []
+    };
   }
   
-  return appData;
+  // 智能选择数据源：比较数据新旧程度
+  if (appData && oldData) {
+    // 如果两种格式都存在，选择记录数更多的（可能是更新的）
+    if (oldData.records.length > appData.records.length) {
+      console.log('使用旧格式数据（记录更多）');
+      saveData(oldData); // 同步到新格式
+      return oldData;
+    }
+  }
+  
+  // 优先返回新格式数据
+  if (appData) {
+    return appData;
+  }
+  
+  // 返回旧格式数据或空数据
+  return oldData || { habits: [], records: [], todos: [] };
 };
 
 // 保存所有数据

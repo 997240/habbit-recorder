@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Download, Trash2, Database, AlertTriangle, Upload } from 'lucide-react';
-import { storage } from '../../utils/storage';
+import { storage, loadData, saveData } from '../../utils/storage';
 export const SettingsPage: React.FC = () => {
   const [importing, setImporting] = useState(false);
   const [importMessage, setImportMessage] = useState('');
@@ -8,10 +8,11 @@ export const SettingsPage: React.FC = () => {
 
   const handleExport = async () => {
     try {
-      // 导出数据的简化版本
+      // 导出完整数据，包括待办事项
       const data = {
         habits: storage.getAllHabits(),
-        records: storage.getAllRecords()
+        records: storage.getAllRecords(),
+        todos: storage.getAllTodos()
       };
       
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -64,6 +65,16 @@ export const SettingsPage: React.FC = () => {
           if (data.records && Array.isArray(data.records)) {
             // 一次性设置所有记录，而不是一个个添加
             storage.setRecords(data.records);
+          }
+          
+          // 导入待办事项
+          if (data.todos && Array.isArray(data.todos)) {
+            // 获取当前的 AppData
+            const appData = loadData();
+            // 更新待办事项
+            appData.todos = data.todos;
+            // 保存更新后的数据
+            saveData(appData);
           }
           
           setImportMessage('数据导入成功，页面将在2秒后刷新');
