@@ -5,6 +5,8 @@ import { Todo } from '../../types';
 interface TodoItemProps {
   todo: Todo;
   isNewItem?: boolean;
+  isAnyItemEditing: boolean;
+  setIsAnyItemEditing: (editing: boolean) => void;
   onUpdate: (id: string, text: string) => void;
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
@@ -15,6 +17,8 @@ interface TodoItemProps {
 export const TodoItem: React.FC<TodoItemProps> = ({
   todo,
   isNewItem = false,
+  isAnyItemEditing,
+  setIsAnyItemEditing,
   onUpdate,
   onToggle,
   onDelete,
@@ -37,8 +41,11 @@ export const TodoItem: React.FC<TodoItemProps> = ({
     if (isEditing && inputRef.current) {
       inputRef.current.focus();
       inputRef.current.select();
+      setIsAnyItemEditing(true);
+    } else if (!isEditing && !isNewItem) {
+      setIsAnyItemEditing(false);
     }
-  }, [isEditing]);
+  }, [isEditing, isNewItem, setIsAnyItemEditing]);
 
   const handleSave = () => {
     const trimmedText = text.trim();
@@ -216,10 +223,13 @@ export const TodoItem: React.FC<TodoItemProps> = ({
         ) : (
           <div
             onClick={() => {
-              setIsEditing(true);
-              // 开始编辑时隐藏删除按钮和重置滑动状态
-              setShowDelete(false);
-              setSwipeOffset(0);
+              // 只有当没有其他项在编辑时才允许进入编辑状态
+              if (!isAnyItemEditing) {
+                setIsEditing(true);
+                // 开始编辑时隐藏删除按钮和重置滑动状态
+                setShowDelete(false);
+                setSwipeOffset(0);
+              }
             }}
             className={`cursor-pointer ${
               todo.completed
