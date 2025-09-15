@@ -13,7 +13,8 @@ export const TodoPage: React.FC = () => {
     toggleTodo,
     deleteTodo,
     reorderTodos,
-    toggleShowCompleted
+    toggleShowCompleted,
+    insertAfter
   } = useTodoStore();
 
   useEffect(() => {
@@ -69,6 +70,7 @@ export const TodoPage: React.FC = () => {
         onDelete={deleteTodo}
         onAdd={addTodo}
         onReorder={reorderTodos}
+        onInsertAfter={insertAfter}
       />
     </div>
   );

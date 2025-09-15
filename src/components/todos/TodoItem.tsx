@@ -12,6 +12,9 @@ interface TodoItemProps {
   onDelete: (id: string) => void;
   onAddNew?: (text: string, afterId: string) => void;
   onFocus?: () => void;
+  onInsertAfter?: (afterId: string, beforeText: string, afterText: string) => void;
+  shouldFocus?: boolean;
+  onFocusHandled?: () => void;
 }
 
 export const TodoItem: React.FC<TodoItemProps> = ({
@@ -23,7 +26,10 @@ export const TodoItem: React.FC<TodoItemProps> = ({
   onToggle,
   onDelete,
   onAddNew,
-  onFocus
+  onFocus,
+  onInsertAfter,
+  shouldFocus,
+  onFocusHandled
 }) => {
   const [isEditing, setIsEditing] = useState(isNewItem);
   const [text, setText] = useState(todo.text);
@@ -31,6 +37,7 @@ export const TodoItem: React.FC<TodoItemProps> = ({
   const [swipeOffset, setSwipeOffset] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
+  const [wasEmptyNewItem, setWasEmptyNewItem] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const touchStartX = useRef(0);
@@ -64,6 +71,18 @@ export const TodoItem: React.FC<TodoItemProps> = ({
     adjustTextareaHeight();
   }, [text, adjustTextareaHeight]);
 
+  // 处理shouldFocus
+  useEffect(() => {
+    if (shouldFocus && !isNewItem) {
+      setIsEditing(true);
+      setWasEmptyNewItem(true);
+      setTimeout(() => {
+        inputRef.current?.focus();
+        onFocusHandled?.();
+      }, 0);
+    }
+  }, [shouldFocus, isNewItem, onFocusHandled]);
+
   const handleSave = () => {
     const trimmedText = text.trim();
     
@@ -74,6 +93,10 @@ export const TodoItem: React.FC<TodoItemProps> = ({
     } else if (!isNewItem && trimmedText && trimmedText !== todo.text) {
       // 更新现有任务
       onUpdate(todo.id, trimmedText);
+    } else if (!isNewItem && !trimmedText && wasEmptyNewItem) {
+      // 如果是通过回车创建的新item且内容为空，删除它
+      onDelete(todo.id);
+      return;
     } else if (!isNewItem) {
       // 恢复原文本
       setText(todo.text);
@@ -81,6 +104,7 @@ export const TodoItem: React.FC<TodoItemProps> = ({
     
     if (!isNewItem) {
       setIsEditing(false);
+      setWasEmptyNewItem(false);
       // 编辑完成时隐藏删除按钮和重置滑动状态
       setShowDelete(false);
       setSwipeOffset(0);
@@ -102,7 +126,20 @@ export const TodoItem: React.FC<TodoItemProps> = ({
           }, 0);
         }
       } else {
-        handleSave();
+        // 对于现有item，获取光标位置并分割文本
+        if (inputRef.current && onInsertAfter) {
+          const cursorPosition = inputRef.current.selectionStart;
+          const beforeText = text.substring(0, cursorPosition);
+          const afterText = text.substring(cursorPosition);
+          
+          // 保存当前item的前半部分文本，并在其后插入新item包含后半部分文本
+          onInsertAfter(todo.id, beforeText, afterText);
+          
+          // 立即更新当前组件的显示文本为截断后的文本
+          setText(beforeText);
+        } else {
+          handleSave();
+        }
       }
     } else if (e.key === 'Escape') {
       setText(isNewItem ? '' : todo.text);

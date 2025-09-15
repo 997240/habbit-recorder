@@ -26,6 +26,9 @@ interface TodoStore {
   
   // 切换显示已完成
   toggleShowCompleted: () => void;
+  
+  // 插入任务（用于回车分割）
+  insertAfter: (afterId: string, beforeText: string, afterText: string) => string;
 }
 
 export const useTodoStore = create<TodoStore>((set, get) => ({
@@ -203,5 +206,54 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
   
   toggleShowCompleted: () => {
     set(state => ({ showCompleted: !state.showCompleted }));
+  },
+  
+  insertAfter: (afterId: string, beforeText: string, afterText: string) => {
+    const { todos } = get();
+    const trimmedBeforeText = beforeText.trim();
+    const trimmedAfterText = afterText.trim();
+    
+    // 找到要分割的任务
+    const index = todos.findIndex(t => t.id === afterId);
+    if (index === -1) return '';
+    
+    // 创建新任务
+    const newTodoId = `todo_${Date.now()}`;
+    const newTodo: Todo = {
+      id: newTodoId,
+      text: trimmedAfterText,
+      completed: false,
+      order: 0,
+      createdAt: new Date().toISOString(),
+      completedAt: null
+    };
+    
+    // 更新原任务的文本
+    const updatedTodos = [...todos];
+    updatedTodos[index] = {
+      ...updatedTodos[index],
+      text: trimmedBeforeText
+    };
+    
+    // 在原任务后插入新任务
+    const newTodos = [
+      ...updatedTodos.slice(0, index + 1),
+      newTodo,
+      ...updatedTodos.slice(index + 1)
+    ];
+    
+    // 重新计算order
+    const reorderedTodos = newTodos.map((todo, idx) => ({
+      ...todo,
+      order: idx
+    }));
+    
+    set({ todos: reorderedTodos });
+    
+    // 保存到存储
+    const data = loadData();
+    saveData({ ...data, todos: reorderedTodos });
+    
+    return newTodoId;
   }
 }));

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { TodoItem } from './TodoItem';
 import { Todo } from '../../types';
 
@@ -10,6 +10,7 @@ interface TodoListProps {
   onDelete: (id: string) => void;
   onAdd: (text: string, afterId?: string) => void;
   onReorder: (startIndex: number, endIndex: number) => void;
+  onInsertAfter?: (afterId: string, beforeText: string, afterText: string) => string;
 }
 
 export const TodoList: React.FC<TodoListProps> = ({
@@ -19,12 +20,14 @@ export const TodoList: React.FC<TodoListProps> = ({
   onToggle,
   onDelete,
   onAdd,
-  onReorder
+  onReorder,
+  onInsertAfter
 }) => {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [newInputAfterItemId, setNewInputAfterItemId] = useState<string | null>(null);
   const [isAnyItemEditing, setIsAnyItemEditing] = useState(false);
+  const [focusNewItemId, setFocusNewItemId] = useState<string | null>(null);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isDragging = useRef(false);
 
@@ -48,7 +51,7 @@ export const TodoList: React.FC<TodoListProps> = ({
     const result: (Todo & { isInput?: boolean })[] = [];
     let inputAdded = false;
 
-    displayTodos.forEach((todo, index) => {
+    displayTodos.forEach((todo) => {
       result.push(todo);
       
       // 在指定项后添加输入框
@@ -145,7 +148,7 @@ export const TodoList: React.FC<TodoListProps> = ({
 
   return (
     <div className="flex-1 overflow-y-auto">
-      {todosWithInput().map((todo, index) => {
+      {todosWithInput().map((todo) => {
         const isNewInput = todo.isInput;
         const actualIndex = isNewInput ? -1 : displayTodos.findIndex(t => t.id === todo.id);
         
@@ -196,6 +199,17 @@ export const TodoList: React.FC<TodoListProps> = ({
                   }
                 }
               }}
+              onInsertAfter={(afterId, beforeText, afterText) => {
+                if (onInsertAfter) {
+                  const newId = onInsertAfter(afterId, beforeText, afterText);
+                  // 设置新item需要聚焦
+                  if (newId) {
+                    setFocusNewItemId(newId);
+                  }
+                }
+              }}
+              shouldFocus={focusNewItemId === todo.id}
+              onFocusHandled={() => setFocusNewItemId(null)}
             />
           </div>
         );
