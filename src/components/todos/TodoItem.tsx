@@ -95,6 +95,10 @@ export const TodoItem: React.FC<TodoItemProps> = ({
       onUpdate(todo.id, trimmedText);
     } else if (!isNewItem && !trimmedText && wasEmptyNewItem) {
       // 如果是通过回车创建的新item且内容为空，删除它
+      // 在删除前先重置状态，避免isAnyItemEditing被卡住
+      setIsEditing(false);
+      setWasEmptyNewItem(false);
+      setIsAnyItemEditing(false);  // 直接重置全局编辑状态
       onDelete(todo.id);
       return;
     } else if (!isNewItem) {
