@@ -38,6 +38,7 @@ export const TodoItem: React.FC<TodoItemProps> = ({
   const [showDelete, setShowDelete] = useState(false);
   const [swipeOffset, setSwipeOffset] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isCompleting, setIsCompleting] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
   const [wasEmptyNewItem, setWasEmptyNewItem] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -244,11 +245,29 @@ export const TodoItem: React.FC<TodoItemProps> = ({
     }, 300);
   };
 
+  const handleToggle = () => {
+    // 只有在从未完成到完成时才播放动画
+    if (!todo.completed) {
+      setIsCompleting(true);
+      setTimeout(() => {
+        onToggle(todo.id);
+        setIsCompleting(false);
+      }, 300); // 动画时长
+    } else {
+      // 从完成到未完成则立即响应
+      onToggle(todo.id);
+    }
+  };
+
   return (
     <div
       ref={containerRef}
       className={`flex items-center gap-3 px-4 py-3 bg-white border-b border-gray-100 transition-all duration-300 ease-out ${
-        isDeleting ? 'opacity-0 translate-y-2' : 'opacity-100 translate-y-0'
+        isDeleting
+          ? 'opacity-0 translate-y-2'
+          : isCompleting
+          ? 'opacity-0 scale-95'
+          : 'opacity-100 translate-y-0'
       }`}
       style={{
         transform: `translateX(${swipeOffset}px) ${isDeleting ? 'translateY(8px)' : ''}`
@@ -260,7 +279,7 @@ export const TodoItem: React.FC<TodoItemProps> = ({
       {/* 复选框 */}
       {!isNewItem ? (
         <button
-          onClick={() => onToggle(todo.id)}
+          onClick={handleToggle}
           className={`flex-shrink-0 w-5 h-5 rounded border-2 transition-all ${
             todo.completed
               ? 'bg-green-500 border-green-500'
