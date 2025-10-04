@@ -335,7 +335,7 @@ export const TodoItem: React.FC<TodoItemProps> = ({
       {!isNewItem && (
         <button
           onClick={() => onDelete(todo.id)}
-          className={`flex-shrink-0 p-1 text-red-500 hover:bg-red-50 rounded transition-opacity ${
+          className={`flex-shrink-0 p-1 text-red-500 hover:bg-red-50 rounded transition-opacity hidden md:block ${
             showDelete ? 'opacity-100' : 'opacity-0 hover:opacity-100'
           }`}
         >
