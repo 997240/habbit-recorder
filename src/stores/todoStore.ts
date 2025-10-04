@@ -151,12 +151,17 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
     let newTodos = [...todos];
     newTodos[todoIndex] = updatedTodo;
     
-    // 如果标记为完成，移动到底部
+    // 如果标记为完成，移动到已完成区域的顶部
     if (updatedTodo.completed) {
       newTodos = [
         ...newTodos.filter(t => !t.completed),
         ...newTodos.filter(t => t.completed)
       ];
+    } else {
+      // 如果取消完成，移动到未完成区域的底部
+      const incompleteTodos = newTodos.filter(t => !t.completed);
+      const completedTodos = newTodos.filter(t => t.completed);
+      newTodos = [...incompleteTodos, ...completedTodos];
     }
     
     // 重新计算order

@@ -246,15 +246,15 @@ export const TodoItem: React.FC<TodoItemProps> = ({
   };
 
   const handleToggle = () => {
-    // 只有在从未完成到完成时才播放动画
     if (!todo.completed) {
+      // 从未完成到完成：播放淡出动画
       setIsCompleting(true);
       setTimeout(() => {
         onToggle(todo.id);
         setIsCompleting(false);
       }, 300); // 动画时长
     } else {
-      // 从完成到未完成则立即响应
+      // 从完成到未完成：直接更新状态
       onToggle(todo.id);
     }
   };
