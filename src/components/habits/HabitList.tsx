@@ -218,7 +218,7 @@ export const HabitList: React.FC = () => {
       {/* Click outside to close menu */}
       {activeMenuId && (
         <div 
-          className="fixed inset-0 z-[-1]" 
+          className="fixed inset-0 z-10" 
           onClick={() => setActiveMenuId(null)}
         />
       )}
