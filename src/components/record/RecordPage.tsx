@@ -19,7 +19,7 @@ export const RecordPage: React.FC = () => {
   const [showCompleted, setShowCompleted] = useState(true);
   const [showNotCompleted, setShowNotCompleted] = useState(true);
 
-  const activeHabits = habits.filter(habit => habit.isActive);
+  const activeHabits = habits.filter(habit => habit.isActive).sort((a, b) => a.order - b.order);
 
   // 使用 useMemo 计算已完成和未完成的习惯
   const { completedHabits, notCompletedHabits } = React.useMemo(() => {

@@ -9,6 +9,7 @@ export interface Habit {
   isActive: boolean;
   createdAt: string;
   monthlyStartDay?: number;
+  order: number;
 }
 
 export interface HabitRecord {

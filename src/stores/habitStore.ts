@@ -14,11 +14,15 @@ export const useHabitStore = create<HabitStore>()(
   
   // Habit 相关操作
   addHabit: (habit: Habit) => {
+    // 为新习惯设置 order（设为当前最大值 + 1）
+    const maxOrder = Math.max(0, ...get().habits.map(h => h.order || 0));
+    const habitWithOrder = { ...habit, order: maxOrder + 1 };
+    
     // 保存到 localStorage
-    storage.addHabit(habit);
+    storage.addHabit(habitWithOrder);
     // 更新状态
     set((state) => ({
-      habits: [...state.habits, habit]
+      habits: [...state.habits, habitWithOrder]
     }));
   },
   
@@ -51,6 +55,66 @@ export const useHabitStore = create<HabitStore>()(
         habits: state.habits.map(h => h.id === habitId ? updatedHabit : h)
       }));
     }
+  },
+  
+  moveHabitUp: (habitId: string) => {
+    const habits = get().habits;
+    const activeHabits = habits.filter(h => h.isActive).sort((a, b) => a.order - b.order);
+    const currentIndex = activeHabits.findIndex(h => h.id === habitId);
+    
+    // 如果已经是第一个，不能上移
+    if (currentIndex <= 0) return;
+    
+    // 交换 order
+    const currentHabit = activeHabits[currentIndex];
+    const previousHabit = activeHabits[currentIndex - 1];
+    const tempOrder = currentHabit.order;
+    
+    const updatedCurrentHabit = { ...currentHabit, order: previousHabit.order };
+    const updatedPreviousHabit = { ...previousHabit, order: tempOrder };
+    
+    // 保存到 localStorage
+    storage.updateHabit(updatedCurrentHabit);
+    storage.updateHabit(updatedPreviousHabit);
+    
+    // 更新状态
+    set((state) => ({
+      habits: state.habits.map(h => {
+        if (h.id === updatedCurrentHabit.id) return updatedCurrentHabit;
+        if (h.id === updatedPreviousHabit.id) return updatedPreviousHabit;
+        return h;
+      })
+    }));
+  },
+  
+  moveHabitDown: (habitId: string) => {
+    const habits = get().habits;
+    const activeHabits = habits.filter(h => h.isActive).sort((a, b) => a.order - b.order);
+    const currentIndex = activeHabits.findIndex(h => h.id === habitId);
+    
+    // 如果已经是最后一个，不能下移
+    if (currentIndex < 0 || currentIndex >= activeHabits.length - 1) return;
+    
+    // 交换 order
+    const currentHabit = activeHabits[currentIndex];
+    const nextHabit = activeHabits[currentIndex + 1];
+    const tempOrder = currentHabit.order;
+    
+    const updatedCurrentHabit = { ...currentHabit, order: nextHabit.order };
+    const updatedNextHabit = { ...nextHabit, order: tempOrder };
+    
+    // 保存到 localStorage
+    storage.updateHabit(updatedCurrentHabit);
+    storage.updateHabit(updatedNextHabit);
+    
+    // 更新状态
+    set((state) => ({
+      habits: state.habits.map(h => {
+        if (h.id === updatedCurrentHabit.id) return updatedCurrentHabit;
+        if (h.id === updatedNextHabit.id) return updatedNextHabit;
+        return h;
+      })
+    }));
   },
   
   // Record 相关操作
@@ -103,8 +167,23 @@ export const useHabitStore = create<HabitStore>()(
   
   // 初始化数据
   loadInitialData: () => {
-    const habits = storage.getHabits();
+    let habits = storage.getHabits();
     let records = storage.getRecords();
+    
+    // 数据迁移：为没有 order 字段的习惯添加 order
+    let needsUpdate = false;
+    habits = habits.map((habit, index) => {
+      if (habit.order === undefined || habit.order === null) {
+        needsUpdate = true;
+        return { ...habit, order: index + 1 };
+      }
+      return habit;
+    });
+    
+    // 如果有习惯缺少 order，更新存储
+    if (needsUpdate) {
+      habits.forEach(habit => storage.updateHabit(habit));
+    }
     
     // 数据完整性验证：移除重复记录
     const recordMap = new Map<string, HabitRecord>();

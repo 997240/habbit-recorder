@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Edit3, Archive, Trash2, MoreHorizontal, Target as TargetIcon } from 'lucide-react';
+import { Plus, Edit3, Archive, Trash2, MoreHorizontal, Target as TargetIcon, ChevronUp, ChevronDown } from 'lucide-react';
 import { Habit } from '../../types';
 import { useHabitStore } from '../../stores/habitStore';
 import { useUIStore } from '../../stores/uiStore';
@@ -9,11 +9,13 @@ export const HabitList: React.FC = () => {
   const habits = useHabitStore(state => state.habits);
   const deleteHabit = useHabitStore(state => state.deleteHabit);
   const toggleHabitActive = useHabitStore(state => state.toggleHabitActive);
+  const moveHabitUp = useHabitStore(state => state.moveHabitUp);
+  const moveHabitDown = useHabitStore(state => state.moveHabitDown);
   
   const openHabitForm = useUIStore(state => state.openHabitForm);
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
 
-  const activeHabits = habits.filter(habit => habit.isActive);
+  const activeHabits = habits.filter(habit => habit.isActive).sort((a, b) => a.order - b.order);
   const archivedHabits = habits.filter(habit => !habit.isActive);
 
   const getHabitTypeColor = (type: string) => {
@@ -36,7 +38,7 @@ export const HabitList: React.FC = () => {
     }
   };
 
-  const HabitCard: React.FC<{ habit: Habit; isArchived?: boolean }> = ({ habit }) => (
+  const HabitCard: React.FC<{ habit: Habit; isArchived?: boolean; isFirst?: boolean; isLast?: boolean }> = ({ habit, isFirst, isLast }) => (
     <div className={`rounded-xl p-6 hover:shadow-lg transition-all duration-200 ${!habit.isActive ? 'bg-gray-50 border border-gray-200 opacity-90' : 'bg-white border border-gray-200'}`}>
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-start gap-3">
@@ -51,7 +53,38 @@ export const HabitList: React.FC = () => {
           </div>
         </div>
         
-        <div className="relative">
+        <div className="flex items-center gap-2">
+          {/* 排序按钮（仅活跃习惯显示） */}
+          {habit.isActive && (
+            <div className="flex flex-col gap-1">
+              <button
+                onClick={() => moveHabitUp(habit.id)}
+                disabled={isFirst}
+                className={`p-1 rounded transition-colors ${
+                  isFirst 
+                    ? 'text-gray-300 cursor-not-allowed' 
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                }`}
+                title="上移"
+              >
+                <ChevronUp className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => moveHabitDown(habit.id)}
+                disabled={isLast}
+                className={`p-1 rounded transition-colors ${
+                  isLast 
+                    ? 'text-gray-300 cursor-not-allowed' 
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                }`}
+                title="下移"
+              >
+                <ChevronDown className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+          
+          <div className="relative">
           <button
             onClick={() => setActiveMenuId(activeMenuId === habit.id ? null : habit.id)}
             className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all duration-200"
@@ -96,6 +129,7 @@ export const HabitList: React.FC = () => {
             </div>
           )}
         </div>
+        </div>
       </div>
 
       <div className="space-y-2">
@@ -137,8 +171,14 @@ export const HabitList: React.FC = () => {
         </h2>
         {activeHabits.length > 0 ? (
           <div className="grid gap-4 md:grid-cols-2">
-            {activeHabits.map(habit => (
-              <HabitCard key={habit.id} habit={habit} isArchived={false} />
+            {activeHabits.map((habit, index) => (
+              <HabitCard 
+                key={habit.id} 
+                habit={habit} 
+                isArchived={false}
+                isFirst={index === 0}
+                isLast={index === activeHabits.length - 1}
+              />
             ))}
           </div>
         ) : (

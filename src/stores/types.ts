@@ -11,6 +11,8 @@ export interface HabitStore {
   updateHabit: (habit: Habit) => void;
   deleteHabit: (habitId: string) => void;
   toggleHabitActive: (habitId: string) => void;
+  moveHabitUp: (habitId: string) => void;
+  moveHabitDown: (habitId: string) => void;
   
   // Record 相关操作
   addRecord: (record: HabitRecord) => void;

@@ -15,7 +15,7 @@ export const Dashboard: React.FC = () => {
   const [chartType, setChartType] = useState<'bar' | 'line'>('bar');
   const [selectedHabitType, setSelectedHabitType] = useState<string>('all');
 
-  const activeHabits = habits.filter(habit => habit.isActive);
+  const activeHabits = habits.filter(habit => habit.isActive).sort((a, b) => a.order - b.order);
   const dateRange = getTimeRangeDates(timeRange);
 
   // Filter records for the selected time range
