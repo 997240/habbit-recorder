@@ -53,44 +53,48 @@ export const HabitList: React.FC = () => {
           </div>
         </div>
         
-        <div className="flex items-center gap-2">
-          {/* 排序按钮（仅活跃习惯显示） */}
-          {habit.isActive && (
-            <div className="flex flex-col gap-1">
+        <div className="flex items-center gap-3">
+          {/* 操作按钮组 */}
+          <div className="relative">
+            <div className="flex flex-col border border-gray-200 rounded-lg bg-gray-50 overflow-hidden">
+              {habit.isActive && (
+                <>
+                  <button
+                    onClick={() => moveHabitUp(habit.id)}
+                    disabled={isFirst}
+                    className={`p-2 transition-all duration-200 ${
+                      isFirst 
+                        ? 'text-gray-400 bg-gray-50 opacity-50 cursor-not-allowed' 
+                        : 'text-gray-600 hover:bg-blue-50 hover:text-blue-600 active:scale-95'
+                    }`}
+                    title="上移"
+                  >
+                    <ChevronUp className="w-5 h-5" />
+                  </button>
+                  <div className="border-t border-gray-200"></div>
+                  <button
+                    onClick={() => moveHabitDown(habit.id)}
+                    disabled={isLast}
+                    className={`p-2 transition-all duration-200 ${
+                      isLast 
+                        ? 'text-gray-400 bg-gray-50 opacity-50 cursor-not-allowed' 
+                        : 'text-gray-600 hover:bg-blue-50 hover:text-blue-600 active:scale-95'
+                    }`}
+                    title="下移"
+                  >
+                    <ChevronDown className="w-5 h-5" />
+                  </button>
+                  <div className="border-t border-gray-200"></div>
+                </>
+              )}
               <button
-                onClick={() => moveHabitUp(habit.id)}
-                disabled={isFirst}
-                className={`p-1 rounded transition-colors ${
-                  isFirst 
-                    ? 'text-gray-300 cursor-not-allowed' 
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                }`}
-                title="上移"
+                onClick={() => setActiveMenuId(activeMenuId === habit.id ? null : habit.id)}
+                className="p-2 text-gray-600 hover:bg-blue-50 hover:text-blue-600 active:scale-95 transition-all duration-200"
+                title="更多选项"
               >
-                <ChevronUp className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => moveHabitDown(habit.id)}
-                disabled={isLast}
-                className={`p-1 rounded transition-colors ${
-                  isLast 
-                    ? 'text-gray-300 cursor-not-allowed' 
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                }`}
-                title="下移"
-              >
-                <ChevronDown className="w-4 h-4" />
+                <MoreHorizontal className="w-5 h-5" />
               </button>
             </div>
-          )}
-          
-          <div className="relative">
-          <button
-            onClick={() => setActiveMenuId(activeMenuId === habit.id ? null : habit.id)}
-            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all duration-200"
-          >
-            <MoreHorizontal className="w-4 h-4" />
-          </button>
           
           {activeMenuId === habit.id && (
             <div className="absolute right-0 top-10 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-20 min-w-[120px]">
