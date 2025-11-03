@@ -29,6 +29,7 @@ const TodoListContent: React.FC<TodoListProps> = ({
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [newInputAfterItemId, setNewInputAfterItemId] = useState<string | null>(null);
   const [focusNewItemId, setFocusNewItemId] = useState<string | null>(null);
+  const [autoFocusEnabled, setAutoFocusEnabled] = useState(false);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isDragging = useRef(false);
 
@@ -204,6 +205,7 @@ const TodoListContent: React.FC<TodoListProps> = ({
               onDelete={onDelete}
               onAddNew={(text, afterId) => {
                 onAdd(text, afterId === 'new_todo' ? undefined : afterId.replace('new_', ''));
+                setAutoFocusEnabled(true);
                 // 在新创建的任务后继续显示输入框
                 const prevTodoId = afterId.replace('new_', '');
                 if (prevTodoId !== 'todo') {
@@ -214,6 +216,7 @@ const TodoListContent: React.FC<TodoListProps> = ({
               onFocus={() => {
                 // 只有新输入框获得焦点时才设置位置
                 if (isNewInput) {
+                  setAutoFocusEnabled(true);
                   // 当前输入框获得焦点，清除其他位置的输入框
                   const currentAfterItemId = todo.id.startsWith('new_') 
                     ? todo.id.replace('new_', '') 
@@ -231,12 +234,14 @@ const TodoListContent: React.FC<TodoListProps> = ({
                   const newId = onInsertAfter(afterId, beforeText, afterText);
                   // 设置新item需要聚焦
                   if (newId) {
+                    setAutoFocusEnabled(true);
                     setFocusNewItemId(newId);
                   }
                 }
               }}
               shouldFocus={focusNewItemId === todo.id}
               onFocusHandled={() => setFocusNewItemId(null)}
+              allowAutoFocus={autoFocusEnabled}
             />
           </div>
         );

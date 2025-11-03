@@ -14,6 +14,7 @@ interface TodoItemProps {
   onInsertAfter?: (afterId: string, beforeText: string, afterText: string) => void;
   shouldFocus?: boolean;
   onFocusHandled?: () => void;
+  allowAutoFocus?: boolean;
 }
 
 export const TodoItem: React.FC<TodoItemProps> = ({
@@ -26,7 +27,8 @@ export const TodoItem: React.FC<TodoItemProps> = ({
   onFocus,
   onInsertAfter,
   shouldFocus,
-  onFocusHandled
+  onFocusHandled,
+  allowAutoFocus = true
 }) => {
   const { getItemState, setItemState } = useTodoListContext();
   const itemState = getItemState(todo.id);
@@ -58,13 +60,13 @@ export const TodoItem: React.FC<TodoItemProps> = ({
   }, []);
 
   useEffect(() => {
-    if (isEditing && inputRef.current) {
+    if (allowAutoFocus && isEditing && inputRef.current) {
       inputRef.current.focus();
       inputRef.current.select();
       // 初始化时调整高度
       adjustTextareaHeight();
     }
-  }, [isEditing, adjustTextareaHeight]);
+  }, [allowAutoFocus, isEditing, adjustTextareaHeight]);
 
   // 监听文本变化，自动调整高度
   useEffect(() => {

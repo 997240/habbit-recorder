@@ -33,7 +33,7 @@ interface TodoStore {
 
 export const useTodoStore = create<TodoStore>((set, get) => ({
   todos: [],
-  showCompleted: true,
+  showCompleted: false,
   
   loadTodos: () => {
     const data = loadData();
