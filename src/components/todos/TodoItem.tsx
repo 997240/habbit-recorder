@@ -86,6 +86,87 @@ export const TodoItem: React.FC<TodoItemProps> = ({
     }
   }, [shouldFocus, isNewItem, todo.id, setItemState, onFocusHandled]);
 
+  // 使用原生事件监听器处理触摸滑动，避免passive event listener警告
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || isEditing || isNewItem) return;
+
+    const handleTouchStartNative = (e: TouchEvent) => {
+      if (!isNewItem && getItemState(todo.id) === 'idle') {
+        touchStartX.current = e.touches[0].clientX;
+        touchEndX.current = e.touches[0].clientX;
+        isSwipping.current = false;
+      }
+    };
+
+    const handleTouchMoveNative = (e: TouchEvent) => {
+      const itemState = getItemState(todo.id);
+      if (!isNewItem && (itemState === 'idle' || itemState === 'swiping')) {
+        touchEndX.current = e.touches[0].clientX;
+        const swipeDistance = touchStartX.current - touchEndX.current;
+        
+        if (Math.abs(swipeDistance) > 5) {
+          if (!isSwipping.current) {
+            isSwipping.current = true;
+            setItemState(todo.id, 'swiping');
+          }
+          e.preventDefault();
+        }
+        
+        if (isSwipping.current) {
+          const maxLeftSwipe = 80;
+          const maxRightSwipe = 20;
+          
+          if (swipeDistance > 0) {
+            setSwipeOffset(-Math.min(swipeDistance, maxLeftSwipe));
+          } else {
+            setSwipeOffset(-Math.max(swipeDistance, -maxRightSwipe));
+          }
+        }
+      }
+    };
+
+    const handleTouchEndNative = () => {
+      const swipeDistance = touchStartX.current - touchEndX.current;
+      const containerWidth = container.offsetWidth || 0;
+      const swipePercentage = Math.abs(swipeDistance) / containerWidth;
+      
+      if (isSwipping.current) {
+        if (swipePercentage > 0.2) {
+          if (swipeDistance > 0) {
+            setSwipeOffset(-80);
+            setShowDelete(true);
+          } else {
+            setSwipeOffset(0);
+            setShowDelete(false);
+          }
+        } else {
+          if (showDelete) {
+            setSwipeOffset(-80);
+          } else {
+            setSwipeOffset(0);
+          }
+        }
+        
+        if (!isNewItem) {
+          setItemState(todo.id, 'idle');
+        }
+      }
+      
+      isSwipping.current = false;
+    };
+
+    container.addEventListener('touchstart', handleTouchStartNative);
+    container.addEventListener('touchmove', handleTouchMoveNative, { passive: false });
+    container.addEventListener('touchend', handleTouchEndNative);
+
+    return () => {
+      container.removeEventListener('touchstart', handleTouchStartNative);
+      container.removeEventListener('touchmove', handleTouchMoveNative);
+      container.removeEventListener('touchend', handleTouchEndNative);
+    };
+  }, [isEditing, isNewItem, todo.id, showDelete, getItemState, setItemState]);
+
   const handleSave = () => {
     const trimmedText = text.trim();
     
@@ -160,82 +241,6 @@ export const TodoItem: React.FC<TodoItemProps> = ({
     }
   };
 
-  // 处理触摸事件（左滑删除）
-  const handleTouchStart = (e: React.TouchEvent) => {
-    // 检查是否可以开始滑动
-    if (!isNewItem && itemState === 'idle') {
-      touchStartX.current = e.touches[0].clientX;
-      touchEndX.current = e.touches[0].clientX;
-      isSwipping.current = false;
-    }
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isNewItem && (itemState === 'idle' || itemState === 'swiping')) {
-      touchEndX.current = e.touches[0].clientX;
-      const swipeDistance = touchStartX.current - touchEndX.current;
-      
-      // 如果开始滑动，标记为滑动状态
-      if (Math.abs(swipeDistance) > 5) {
-        if (!isSwipping.current) {
-          isSwipping.current = true;
-          setItemState(todo.id, 'swiping');
-        }
-        e.preventDefault();
-      }
-      
-      // 实时更新滑动偏移，但限制滑动范围
-      if (isSwipping.current) {
-        // 左滑最多80px（删除按钮宽度），右滑最多20px
-        const maxLeftSwipe = 80;
-        const maxRightSwipe = 20;
-        
-        if (swipeDistance > 0) {
-          // 左滑
-          setSwipeOffset(-Math.min(swipeDistance, maxLeftSwipe));
-        } else {
-          // 右滑
-          setSwipeOffset(-Math.max(swipeDistance, -maxRightSwipe));
-        }
-      }
-    }
-  };
-
-  const handleTouchEnd = () => {
-    const swipeDistance = touchStartX.current - touchEndX.current;
-    const containerWidth = containerRef.current?.offsetWidth || 0;
-    const swipePercentage = Math.abs(swipeDistance) / containerWidth;
-    
-    if (isSwipping.current) {
-      // 如果滑动距离超过容器宽度的20%，则显示/隐藏删除按钮
-      if (swipePercentage > 0.2) {
-        if (swipeDistance > 0) {
-          // 左滑显示删除，固定在-80px位置
-          setSwipeOffset(-80);
-          setShowDelete(true);
-        } else {
-          // 右滑隐藏删除，回到原位
-          setSwipeOffset(0);
-          setShowDelete(false);
-        }
-      } else {
-        // 滑动距离不够，回弹到当前状态
-        if (showDelete) {
-          setSwipeOffset(-80);
-        } else {
-          setSwipeOffset(0);
-        }
-      }
-      
-      // 重置状态机
-      if (!isNewItem) {
-        setItemState(todo.id, 'idle');
-      }
-    }
-    
-    isSwipping.current = false;
-  };
-
   const handleDeleteClick = () => {
     setIsPressed(true);
     setIsDeleting(true);
@@ -274,9 +279,6 @@ export const TodoItem: React.FC<TodoItemProps> = ({
       style={{
         transform: `translateX(${swipeOffset}px) ${isDeleting ? 'translateY(8px)' : ''}`
       }}
-      onTouchStart={!isEditing && !isNewItem ? handleTouchStart : undefined}
-      onTouchMove={!isEditing && !isNewItem ? handleTouchMove : undefined}
-      onTouchEnd={!isEditing && !isNewItem ? handleTouchEnd : undefined}
     >
       {/* 复选框 */}
       {!isNewItem ? (
@@ -331,6 +333,11 @@ export const TodoItem: React.FC<TodoItemProps> = ({
                 // 开始编辑时隐藏删除按钮和重置滑动状态
                 setShowDelete(false);
                 setSwipeOffset(0);
+                // 关键修复：在下一个tick调整高度
+                setTimeout(() => {
+                  adjustTextareaHeight();
+                  inputRef.current?.select();
+                }, 0);
               }
               // 新建项不需要处理，因为它始终是编辑状态
             }}
