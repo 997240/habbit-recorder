@@ -99,6 +99,14 @@ const TodoListContent: React.FC<TodoListProps> = ({
       }
     }
 
+    // 重置被拖拽item的状态机
+    if (draggedIndex !== null) {
+      const draggedTodo = displayTodos[draggedIndex];
+      if (draggedTodo) {
+        setItemState(draggedTodo.id, 'idle');
+      }
+    }
+
     setDraggedIndex(null);
     setDragOverIndex(null);
     isDragging.current = false;
